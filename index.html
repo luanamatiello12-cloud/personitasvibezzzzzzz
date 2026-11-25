@@ -162,6 +162,9 @@ const WIDTHS=[{id:"normal",n:"Normal"},{id:"largo",n:"Largo"}];
 const ARMS=[{id:"normal",n:"Normais"},{id:"fino",n:"Finos"},{id:"afunilado",n:"Antebraço fino"},{id:"aberto",n:"Afastados"}];
 const LEGS=[{id:"normal",n:"Normais"},{id:"finas",n:"Finas"},{id:"afuniladas",n:"Afuniladas"},{id:"afastadas",n:"Afastadas"}];
 const TORSOS=[{id:"reto",n:"Reto"},{id:"cintura",n:"Com cintura"}];
+const EYES=[{id:"padrao",n:"Padrão"},{id:"pontinho",n:"Pontinho"},{id:"grandes",n:"Grandes"},{id:"felizes",n:"Sorrindo"}];
+const MOUTHS=[{id:"neutra",n:"Neutra"},{id:"sorriso",n:"Sorriso"},{id:"aberta",n:"Aberta"}];
+const CHEEKS=[{id:"sem",n:"Normais"},{id:"corada",n:"Coradas"}];
 const SHOES=[{id:"tenis",n:"Tênis"},{id:"bota",n:"Bota"}];
 const HAIRC=[{id:"2A1E1A",n:"Preto"},{id:"6B4026",n:"Castanho"},{id:"9A5B2E",n:"Castanho claro"},{id:"D9B060",n:"Loiro"},{id:"B5562B",n:"Ruivo"},{id:"9A98A0",n:"Grisalho"},{id:"E070B0",n:"Rosa"},{id:"7A3FB0",n:"Roxo"},{id:"3C5BB0",n:"Azul"},{id:"E8E2D8",n:"Platinado"}];
 const CLOTH=[{id:"D9852B",n:"Laranja"},{id:"2F3352",n:"Marinho"},{id:"2A2630",n:"Preto"},{id:"EDE8E0",n:"Branco"},{id:"7D7A86",n:"Cinza"},{id:"B8323A",n:"Vermelho"},{id:"FF2EC4",n:"Vibe Pink"},{id:"7A00FF",n:"Vibe Purple"},{id:"3D6FB8",n:"Azul"},{id:"3E7A4A",n:"Verde"},{id:"E8C140",n:"Amarelo"},{id:"C9B08A",n:"Bege"},{id:"5A3A2A",n:"Marrom"},{id:"A3287B",n:"Magenta"}];
@@ -171,10 +174,10 @@ const ACTIONS=[{id:"nenhuma",n:"Só cumprimenta"},{id:"loja",n:"Abre a loja"},{i
 
 const byId=(list,id,fb)=>list.find(x=>x.id===id)||list.find(x=>x.id===fb)||list[0];
 const HEXOK=s=>/^[0-9A-F]{6}$/i.test(s||"");
-function defaults(){return{nome:"novo.vbz",tipo:"npc",papel:"",corpo:"m",altura:"baixinho",largura:"normal",bracos:"normal",pernas:"normal",tronco:"reto",pele:"media",cabelo:"curto",corCabelo:"6B4026",chapeu:"bone",corChapeu:"3A3440",oculos:"escuros",top:"camiseta",corTop:"D9852B",baixo:"calca",corBaixo:"2F3352",tenis:"tenis",corTenis:"5A3A2A",local:"praca",faz:"parado",acao:"nenhuma",fala:"",notas:"",ordem:Date.now()}}
+function defaults(){return{nome:"novo.vbz",tipo:"npc",papel:"",corpo:"m",altura:"baixinho",largura:"normal",bracos:"normal",pernas:"normal",tronco:"reto",olhos:"padrao",boca:"neutra",bochecha:"sem",pele:"media",cabelo:"curto",corCabelo:"6B4026",chapeu:"bone",corChapeu:"3A3440",oculos:"escuros",top:"camiseta",corTop:"D9852B",baixo:"calca",corBaixo:"2F3352",tenis:"tenis",corTenis:"5A3A2A",local:"praca",faz:"parado",acao:"nenhuma",fala:"",notas:"",ordem:Date.now()}}
 function clean(r){const d=defaults(),o={...d,...(r&&typeof r==="object"?r:{})};
  o.nome=String(o.nome||"").slice(0,24);o.tipo=o.tipo==="avatar"?"avatar":"npc";o.corpo=o.corpo==="f"?"f":"m";
- o.pele=byId(SKIN,o.pele,"media").id;o.altura=byId(HEIGHTS,o.altura,"baixinho").id;o.largura=byId(WIDTHS,o.largura,"normal").id;o.bracos=byId(ARMS,o.bracos,"normal").id;o.pernas=byId(LEGS,o.pernas,"normal").id;o.tronco=byId(TORSOS,o.tronco,"reto").id;o.cabelo=byId(HAIR,o.cabelo,"curto").id;o.chapeu=byId(HAT,o.chapeu,"nenhum").id;o.oculos=byId(GLASSES,o.oculos,"nenhum").id;
+ o.pele=byId(SKIN,o.pele,"media").id;o.altura=byId(HEIGHTS,o.altura,"baixinho").id;o.largura=byId(WIDTHS,o.largura,"normal").id;o.bracos=byId(ARMS,o.bracos,"normal").id;o.pernas=byId(LEGS,o.pernas,"normal").id;o.tronco=byId(TORSOS,o.tronco,"reto").id;o.olhos=byId(EYES,o.olhos,"padrao").id;o.boca=byId(MOUTHS,o.boca,"neutra").id;o.bochecha=byId(CHEEKS,o.bochecha,"sem").id;o.cabelo=byId(HAIR,o.cabelo,"curto").id;o.chapeu=byId(HAT,o.chapeu,"nenhum").id;o.oculos=byId(GLASSES,o.oculos,"nenhum").id;
  o.top=byId(TOPS,o.top,"camiseta").id;o.baixo=byId(BOTTOMS,o.baixo,"calca").id;o.tenis=byId(SHOES,o.tenis,"tenis").id;
  for(const k of["corCabelo","corChapeu","corTop","corBaixo","corTenis"])o[k]=HEXOK(o[k])?String(o[k]).toUpperCase():d[k];
  o.local=byId(PLACES,o.local,"praca").id;o.faz=byId(DOES,o.faz,"parado").id;o.acao=byId(ACTIONS,o.acao,"nenhuma").id;
@@ -214,11 +217,18 @@ function sprite(c){
  rect(6,9,6,11,sk,"ear","earL");rect(17,9,17,11,sk,"ear","earR");put(6,10,skD,"ear","earL");put(17,10,skD,"ear","earR");
  // face
  const ink=[30,22,30];
- put(9,10,ink,"head");put(9,11,ink,"head");put(14,10,ink,"head");put(14,11,ink,"head");
- put(10,10,[245,240,235],"head");put(13,10,[245,240,235],"head");
- row(8,8,10,hcD,"head");row(8,13,15,hcD,"head");
- put(12,12,skD,"head");put(11,14,mul(sk,.6),"head");put(12,14,mul(sk,.6),"head");
- if(fem){put(8,13,mul(sk,1.12),"head");put(15,13,mul(sk,1.12),"head")}
+ const wh=[245,240,235],lip=mul(sk,.6);
+ if(c.olhos==="pontinho"){rect(10,10,10,11,ink,"head");rect(13,10,13,11,ink,"head")}
+ else if(c.olhos==="grandes"){rect(9,10,10,11,ink,"head");rect(13,10,14,11,ink,"head");put(9,10,wh,"head");put(13,10,wh,"head")}
+ else if(c.olhos==="felizes"){for(const [x,y] of[[8,11],[9,10],[10,11],[13,11],[14,10],[15,11]])put(x,y,ink,"head")}
+ else{put(9,10,ink,"head");put(9,11,ink,"head");put(14,10,ink,"head");put(14,11,ink,"head");put(10,10,wh,"head");put(13,10,wh,"head")}
+ if(c.olhos==="pontinho"){row(8,9,10,hcD,"head");row(8,13,14,hcD,"head")}else{row(8,8,10,hcD,"head");row(8,13,15,hcD,"head")}
+ put(12,12,skD,"head");
+ if(c.boca==="sorriso"){put(10,13,lip,"head");put(13,13,lip,"head");put(11,14,lip,"head");put(12,14,lip,"head")}
+ else if(c.boca==="aberta"){row(13,11,12,ink,"head");row(14,11,12,[196,72,84],"head")}
+ else{put(11,14,lip,"head");put(12,14,lip,"head")}
+ if(c.bochecha==="corada"){const bl=[Math.min(255,sk[0]+18),Math.round(sk[1]*.82),Math.round(sk[2]*.88)];put(8,13,bl,"head");put(15,13,bl,"head");if(c.boca!=="sorriso"){put(9,13,bl,"head");put(14,13,bl,"head")}}
+ else if(fem){put(8,13,mul(sk,1.12),"head");put(15,13,mul(sk,1.12),"head")}
  // bottoms
  if(c.baixo==="saia"){rect(T[0],35,T[1],38,bc,"bottom");rect(T[0]-1,39,T[1]+1,43,bc,"bottom");rect(T[0]-2,44,T[1]+2,46,bc,"bottom");for(let x=T[0];x<=T[1];x+=3)rect(x,40,x,46,bcD,"bottom")}
  else{const end=c.baixo==="shorts"?45:56;rect(T[0],35,11,38,bc,"bottom","botL");rect(12,35,T[1],38,bc,"bottom","botL");rect(LL[0],39,LL[1],end,bc,"bottom","botL");rect(LR[0],39,LR[1],end,bc,"bottom","botR");
@@ -407,6 +417,9 @@ function renderForm(){
   field("Pernas",chips(LEGS,c.pernas,v=>set("pernas",v))),
   field("Tronco",chips(TORSOS,c.tronco,v=>set("tronco",v)))];
  f.append(sec("Personagem",...ident));
+ f.append(sec("Rosto",
+  two(field("Olhos",chips(EYES,c.olhos,v=>set("olhos",v))),field("Boca",chips(MOUTHS,c.boca,v=>set("boca",v)))),
+  field("Bochechas",chips(CHEEKS,c.bochecha,v=>set("bochecha",v)))));
  f.append(sec("Cabeça",
   field("Cabelo",chips(HAIR,c.cabelo,v=>set("cabelo",v)),swatches(HAIRC,c.corCabelo,v=>set("corCabelo",v))),
   two(field("Chapéu",chips(HAT,c.chapeu,v=>set("chapeu",v)),...(c.chapeu!=="nenhum"?[swatches(CLOTH,c.corChapeu,v=>set("corChapeu",v))]:[])),
