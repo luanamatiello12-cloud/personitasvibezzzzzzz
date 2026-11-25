@@ -284,7 +284,12 @@ function scale2x(px,W,H){const out=new Array(W*H*4).fill(null),k=v=>v?v.join():"
  return out}
 const PX_NAMES={1:"Bem pixelado",2:"Padrão",3:"Suave",4:"Bem suave"};
 let pxLevel=2;try{const v=+localStorage.getItem("vbz-atelie-pixel");if(PX_NAMES[v])pxLevel=v}catch(e){}
-function pixels(c,level){const s=sprite(c);if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
+/* shorter body: a few rows come out of the legs and the torso, feet stay on the ground */
+const CUT_ROWS=[29,30,31,32,48,49,50,51,52,53];
+function squash(s){const col=new Array(SW*SH).fill(null),part=new Array(SW*SH).fill(null);let ny=SH-1;
+ for(let y=SH-1;y>=0;y--){if(CUT_ROWS.includes(y))continue;for(let x=0;x<SW;x++){col[ny*SW+x]=s.col[y*SW+x];part[ny*SW+x]=s.part[y*SW+x]}ny--}
+ return{col,part}}
+function pixels(c,level){const s=squash(sprite(c));if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
  let px=finish(s.col,s.part,SW,SH),W=SW,H=SH;for(let i=2;i<level;i++){px=scale2x(px,W,H);W*=2;H*=2}return{px,W,H}}
 function spriteCanvas(c,crop,level){
  const r=pixels(c,crop?2:(level||pxLevel)),px=r.px,SW=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
@@ -324,7 +329,7 @@ function renderCast(){
   const g=document.createElement("div");g.className="cgroup";
   for(const [id,c] of items){
    const b=document.createElement("button");b.type="button";b.className="card"+(id===cur?" on":"");b.setAttribute("aria-current",id===cur?"true":"false");
-   const th=document.createElement("span");th.className="thumb";th.append(spriteCanvas(c,[2,-1+1,22,22]));b.append(th);
+   const th=document.createElement("span");th.className="thumb";th.append(spriteCanvas(c,[2,10,22,22]));b.append(th);
    const d=document.createElement("div");const n=document.createElement("div");n.className="nm";n.textContent=c.nome||"sem nome";const r=document.createElement("div");r.className="rl";r.textContent=c.tipo==="npc"?(c.papel||"NPC")+" · "+byId(PLACES,c.local).n:"Avatar inicial";d.append(n,r);b.append(d);
    b.onclick=()=>select(id);g.append(b);
   }
