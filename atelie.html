@@ -170,185 +170,111 @@ function clean(r){const d=defaults(),o={...d,...(r&&typeof r==="object"?r:{})};
  o.papel=String(o.papel||"").slice(0,40);o.fala=String(o.fala||"").slice(0,160);o.notas=String(o.notas||"").slice(0,400);
  o.pos=o.pos&&isFinite(o.pos.x)&&isFinite(o.pos.z)?{x:+o.pos.x,z:+o.pos.z}:null;o.ordem=+o.ordem||0;return o}
 
-/* ---------- pixel sprite: 26 x 66 grid, drawn pixel by pixel, then shaded and outlined ---------- */
-const SW=26, SH=66, OUT=[27,17,32];
+/* ---------- pixel sprite: 30 x 82 grid, three-quarter pose taken from the reference photo ---------- */
+const SW=30, SH=82, OUT=[27,17,32];
 const rgb=h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
 const mul=(c,k)=>c.map(v=>Math.max(0,Math.min(255,Math.round(k<1?v*k:v+(255-v)*(k-1)))));
 function sprite(c,back){
  const col=new Array(SW*SH).fill(null), part=new Array(SW*SH).fill(null);
  // part = [garment, piece]: seams appear between pieces side by side, and between garments top/bottom
- const put=(x,y,cl,g,p)=>{x+=1;y+=1;if(x<0||y<0||x>=SW||y>=SH)return;const i=y*SW+x;col[i]=cl;part[i]=[g,p||g]};
- const rect=(x0,y0,x1,y1,cl,g,p)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)put(x,y,cl,g,p)};
- const row=(y,x0,x1,cl,g,p)=>rect(x0,y,x1,y,cl,g,p);
- const fem=c.corpo==="f";
- const sk=rgb(byId(SKIN,c.pele).c), skD=mul(sk,.82), hc=rgb(c.corCabelo), hcD=mul(hc,.75), tc=rgb(c.corTop), tcD=mul(tc,.78), bc=rgb(c.corBaixo), bcD=mul(bc,.8), sc=rgb(c.corTenis), hat=rgb(c.corChapeu), hatD=mul(hat,.72);
- const T=fem?[7,16]:[6,17], AL=fem?[4,6]:[3,5], AR=fem?[17,19]:[18,20];
- const LL=[T[0]+1,11], LR=[12,T[1]-1];
- // hair behind the head
- if(c.cabelo==="comprido"){rect(6,6,17,fem?27:22,hc,"hairB")}
- if(c.cabelo==="blackpower"){for(let y=0;y<=12;y++){const hw=Math.round(Math.sqrt(Math.max(0,49-(y-6)*(y-6)))*1.15);row(y,Math.max(3,12-hw),Math.min(20,11+hw),hc,"hairB")}}
- // legs and feet
- rect(LL[0],39,LL[1],57,sk,"leg","legL");rect(LR[0],39,LR[1],57,sk,"leg","legR");
- rect(LL[0]-1,57,LL[1],60,sk,"foot","footL");rect(LR[0],57,LR[1]+1,60,sk,"foot","footR");
- // torso, arms, hands
- rect(T[0],19,T[1],38,sk,"body","torso");row(19,T[0],T[0],null,null);
- if(fem){rect(T[0],29,T[0],32,null,null);rect(T[1],29,T[1],32,null,null)}
- rect(AL[0],20,AL[1],34,sk,"arm","armL");row(19,AL[0]+1,AL[1],sk,"arm","armL");
- rect(AR[0],20,AR[1],34,sk,"arm","armR");row(19,AR[0],AR[1]-1,sk,"arm","armR");
- rect(AL[0],35,AL[1],37,sk,"hand","handL");row(38,AL[0]+1,AL[1],sk,"hand","handL");
- rect(AR[0],35,AR[1],37,sk,"hand","handR");row(38,AR[0],AR[1]-1,sk,"hand","handR");
- // neck and head
- rect(10,16,13,18,skD,"neck");
- row(3,9,14,sk,"head");row(4,8,15,sk,"head");rect(7,5,16,14,sk,"head");row(15,8,15,sk,"head");row(16,9,14,sk,"head");
- rect(6,9,6,11,sk,"ear","earL");rect(17,9,17,11,sk,"ear","earR");put(6,10,skD,"ear","earL");put(17,10,skD,"ear","earR");
- // face
- const ink=[30,22,30];
- const shine=[255,255,255];
- if(!back){
- rect(9,10,10,11,ink,"head");
- rect(13,10,14,11,ink,"head");
- row(8,9,10,hcD,"head");row(8,13,14,hcD,"head");
- const lip=mul(sk,.55),blush=[Math.min(255,sk[0]+16),Math.round(sk[1]*.86),Math.round(sk[2]*.9)];
- put(12,12,skD,"head");put(10,13,lip,"head");put(13,13,lip,"head");put(11,14,lip,"head");put(12,14,lip,"head");
- put(8,13,blush,"head");put(15,13,blush,"head");
- if(fem){put(8,9,ink,"head");put(15,9,ink,"head")}}
- // bottoms
- if(c.baixo==="saia"){rect(T[0],35,T[1],38,bc,"bottom");rect(T[0]-1,39,T[1]+1,43,bc,"bottom");rect(T[0]-2,44,T[1]+2,46,bc,"bottom");for(let x=T[0];x<=T[1];x+=3)rect(x,40,x,46,bcD,"bottom")}
- else{const end=c.baixo==="shorts"?45:56;rect(T[0],35,11,38,bc,"bottom","botL");rect(12,35,T[1],38,bc,"bottom","botL");rect(LL[0],39,LL[1],end,bc,"bottom","botL");rect(LR[0],39,LR[1],end,bc,"bottom","botR");
-  if(c.baixo==="shorts"){row(end,LL[0],LL[1],bcD,"bottom","botL");row(end,LR[0],LR[1],bcD,"bottom","botR")}
-  else{row(55,LL[0],LL[1],bcD,"bottom","botL");row(55,LR[0],LR[1],bcD,"bottom","botR")}
-  row(35,T[0],T[1],bcD,"bottom","botL");put(12,35,[214,204,186],"bottom","botL")}
- // shoes
- const sole=[232,226,216];
- if(c.tenis==="bota"){rect(LL[0],51,LL[1],60,sc,"shoe","shoeL");rect(LR[0],51,LR[1],60,sc,"shoe","shoeR");rect(LL[0]-1,58,LL[1],60,sc,"shoe","shoeL");rect(LR[0],58,LR[1]+1,60,sc,"shoe","shoeR");row(61,LL[0]-1,LL[1],mul(sc,.55),"shoe","shoeL");row(61,LR[0],LR[1]+1,mul(sc,.55),"shoe","shoeR");row(53,LL[0],LL[1],mul(sc,.8),"shoe","shoeL");row(53,LR[0],LR[1],mul(sc,.8),"shoe","shoeR")}
- else{rect(LL[0],56,LL[1],60,sc,"shoe","shoeL");rect(LR[0],56,LR[1],60,sc,"shoe","shoeR");rect(LL[0]-1,58,LL[1],60,sc,"shoe","shoeL");rect(LR[0],58,LR[1]+1,60,sc,"shoe","shoeR");row(61,LL[0]-1,LL[1],sole,"shoe","shoeL");row(61,LR[0],LR[1]+1,sole,"shoe","shoeR");const lace=[240,236,230],cap=mul(sc,1.3);if(!back){row(57,LL[0]+1,LL[0]+2,lace,"shoe","shoeL");row(57,LR[1]-2,LR[1]-1,lace,"shoe","shoeR");rect(LL[0]-1,59,LL[0],60,cap,"shoe","shoeL");rect(LR[1],59,LR[1]+1,60,cap,"shoe","shoeR")}}
- // tops
- const longSl=c.top==="moletom"||c.top==="jaqueta";
- if(c.top==="regata"){rect(T[0]+1,22,T[1]-1,36,tc,"top");rect(T[0]+1,19,T[0]+2,21,tc,"top");rect(T[1]-2,19,T[1]-1,21,tc,"top")}
- else{
-  const bot=c.top==="babytee"?30:(longSl?37:38);
-  rect(T[0],19,T[1],bot,tc,"top","torsoT");put(T[0],19,null,null);
-  const sl=longSl?34:(c.top==="babytee"?23:26);
-  rect(AL[0],20,AL[1],sl,tc,"top","slvL");row(19,AL[0]+1,AL[1],tc,"top","slvL");
-  rect(AR[0],20,AR[1],sl,tc,"top","slvR");row(19,AR[0],AR[1]-1,tc,"top","slvR");
-  if(longSl){row(34,AL[0],AL[1],tcD,"top","slvL");row(34,AR[0],AR[1],tcD,"top","slvR");row(bot,T[0],T[1],tcD,"top","torsoT")}
-  else{row(sl,AL[0],AL[1],tcD,"top","slvL");row(sl,AR[0],AR[1],tcD,"top","slvR")}
-  // collar
-  if(back){row(19,9,14,tcD,"top","torsoT");row(bot,T[0],T[1],tcD,"top","torsoT");if(c.top==="moletom"){rect(8,19,15,24,tcD,"top","hood");row(25,9,14,tcD,"top","hood")}if(c.top==="jaqueta")rect(11,22,12,bot-1,tcD,"top","torsoT")}else{
-  row(19,10,13,skD,"neck");put(11,20,skD,"neck");put(12,20,skD,"neck");
-  if(c.top==="camiseta"||c.top==="babytee"){
-   for(const [x,y] of[[9,19],[14,19],[10,20],[13,20],[11,21],[12,21]])put(x,y,tcD,"top","torsoT");
-   row(bot,T[0],T[1],tcD,"top","torsoT");
-}
-  if(c.top==="moletom"){row(18,9,14,tcD,"top","hood");put(9,19,tcD,"top","hood");put(14,19,tcD,"top","hood");rect(9,30,14,33,tcD,"top","torsoT");put(11,21,[240,236,230],"top","torsoT");put(12,22,[240,236,230],"top","torsoT")}
-  if(c.top==="jaqueta"){rect(11,20,12,bot,[237,232,224],"inner");put(10,20,tcD,"top","torsoT");put(13,20,tcD,"top","torsoT");put(8,31,tcD,"top","torsoT");put(15,31,tcD,"top","torsoT")}}
- }
- // feminine shape: waist cut in, bust line, hips left wide
- if(fem){for(let y=27;y<=32;y++){put(T[0],y,null,null);put(T[1],y,null,null)}
-  if(!back){
-  const bs=c.top==="regata"||c.top==="camiseta"||c.top==="babytee"||longSl?tcD:skD;
-  const bd=mul(tc,.58),bl=mul(tc,1.22);
-  for(const x of[T[0]+1,T[0]+2,T[0]+3,T[1]-3,T[1]-2,T[1]-1]){put(x,26,bd,"top","torsoT");put(x,27,bs,"top","torsoT")}
-  put(T[0]+4,25,bd,"top","torsoT");put(T[1]-4,25,bd,"top","torsoT");put(T[0]+4,24,bs,"top","torsoT");put(T[1]-4,24,bs,"top","torsoT");
-  put(T[0]+2,23,bl,"top","torsoT");put(T[1]-2,23,bl,"top","torsoT");
-  put(T[0]+1,29,bs,"top","torsoT");put(T[1]-1,29,bs,"top","torsoT")}}
- // front hair
- const h=c.cabelo;
- if(h==="curto"||h==="comprido"||h==="coque"){
-  row(2,9,14,hc,"hair");row(3,8,15,hc,"hair");rect(7,4,16,6,hc,"hair");
-  if(h!=="coque"){row(7,7,9,hc,"hair");row(7,13,16,hc,"hair");put(11,7,hc,"hair");put(6,6,hc,"hair");put(17,7,hc,"hair")} else {put(7,7,hc,"hair");put(16,7,hc,"hair")}
-  rect(7,8,7,10,hc,"hair");rect(16,8,16,10,hc,"hair");
-  row(4,10,12,mul(hc,1.25),"hair");
- }
- if(h==="comprido"){const e=fem?24:19;rect(6,8,7,e,hc,"hair","hairFL");rect(16,8,17,e,hc,"hair","hairFR");rect(6,11,6,e-3,mul(hc,1.2),"hair","hairFL");put(17,e,null,null);put(6,e,null,null)}
- if(h==="curto"||h==="comprido"||h==="coque"){row(6,8,15,hcD,"hair");put(12,5,mul(hc,1.25),"hair");put(13,5,mul(hc,1.25),"hair")}
- if(h==="coque"){rect(10,-1,13,1,hc,"hair","bun");put(10,-1,null,null);put(13,-1,null,null)}
- if(h==="cacheado"){for(const x of[8,10,12,14])put(x,1,hc,"hair");row(2,7,16,hc,"hair");rect(6,3,17,7,hc,"hair");row(8,6,8,hc,"hair");row(8,15,17,hc,"hair");rect(6,9,6,11,hc,"hair");rect(17,9,17,11,hc,"hair");for(const [x,y] of[[8,3],[11,4],[14,3],[9,6],[13,6],[16,5],[7,5]])put(x,y,hcD,"hair")}
- if(h==="blackpower"){rect(7,1,16,6,hc,"hair");row(7,7,9,hc,"hair");row(7,14,16,hc,"hair");for(const [x,y] of[[9,2],[13,3],[10,5],[15,5],[8,4]])put(x,y,hcD,"hair")}
- if(h==="raspado"){row(3,9,14,hcD,"hair");rect(8,4,15,5,hcD,"hair");put(7,6,hcD,"hair");put(16,6,hcD,"hair")}
- // back of the head
- if(back){const hl=mul(hc,1.2);
-  if(h==="curto"){rect(7,4,16,11,hc,"hair");row(12,8,15,hc,"hair");row(13,10,13,hcD,"hair");for(const [x,y] of[[9,8],[12,9],[14,7],[10,11]])put(x,y,hcD,"hair");row(5,9,11,hl,"hair")}
-  if(h==="comprido"){const e=fem?27:22;rect(7,3,16,6,hc,"hair");rect(6,6,17,e,hc,"hair");for(const x of[9,12,15])rect(x,9,x,e-1,hcD,"hair");rect(7,8,7,e-4,hl,"hair");put(6,e,null,null);put(17,e,null,null)}
-  if(h==="coque"){rect(7,4,16,10,hc,"hair");row(11,8,15,hc,"hair");row(12,10,13,hcD,"hair");for(const x of[9,11,13,15])put(x,6,hcD,"hair")}
-  if(h==="cacheado"){rect(6,3,17,12,hc,"hair");row(13,7,16,hc,"hair");for(const [x,y] of[[8,8],[11,9],[14,8],[9,11],[13,11],[16,10],[7,10],[10,13],[15,12]])put(x,y,hcD,"hair")}
-  if(h==="blackpower"){for(let y=0;y<=13;y++){const hw=Math.round(Math.sqrt(Math.max(0,49-(y-6)*(y-6)))*1.15);row(y,Math.max(3,12-hw),Math.min(20,11+hw),hc,"hair")}for(const [x,y] of[[9,2],[13,3],[10,5],[15,5],[8,4],[6,8],[12,9],[16,10],[9,11]])put(x,y,hcD,"hair")}
-  if(h==="raspado"){row(3,9,14,hcD,"hair");rect(7,4,16,9,hcD,"hair");row(10,8,15,hcD,"hair")}
- }
- // hats
- if(c.chapeu==="bone"){row(0,9,14,hat,"hat");row(1,8,15,hat,"hat");rect(7,2,16,6,hat,"hat");row(6,7,16,hatD,"hat");if(back){row(5,10,13,mul(hat,.5),"hat");row(6,10,13,h==="careca"?sk:hc,"hat");put(11,4,mul(hat,.5),"hat");put(12,4,mul(hat,.5),"hat")}else{rect(3,6,8,7,hatD,"brim");put(3,6,null,null);row(7,3,8,mul(hat,.55),"brim");put(12,3,[255,46,196],"hat");put(13,3,[255,46,196],"hat")}row(2,9,11,mul(hat,1.2),"hat")}
- if(c.chapeu==="gorro"){row(-1,10,13,hat,"hat");row(0,8,15,hat,"hat");rect(7,1,16,5,hat,"hat");rect(6,5,17,7,hatD,"hat","cuff");for(let x=7;x<=16;x+=2)rect(x,5,x,7,mul(hat,.6),"hat","cuff");row(1,9,11,mul(hat,1.2),"hat")}
- // glasses
- if(!back&&c.oculos==="escuros"){const g=[26,24,30];rect(8,9,11,11,g,"glass","glL");rect(13,9,16,11,g,"glass","glR");put(12,9,g,"glass","glB");put(7,9,g,"glass","glL");put(9,9,[110,118,140],"glass","glL");put(14,9,[110,118,140],"glass","glR")}
- if(!back&&c.oculos==="grau"){const g=[40,34,44];row(9,8,11,g,"glass","glL");row(12,8,11,g,"glass","glL");rect(8,10,8,11,g,"glass","glL");rect(11,10,11,11,g,"glass","glL");row(9,13,16,g,"glass","glR");row(12,13,16,g,"glass","glR");rect(13,10,13,11,g,"glass","glR");rect(16,10,16,11,g,"glass","glR");put(12,10,g,"glass","glB");put(7,10,g,"glass","glL")}
- return {col,part};
-}
-/* side view, facing right (the left view is this one mirrored) */
-function spriteSide(c){
- const col=new Array(SW*SH).fill(null), part=new Array(SW*SH).fill(null);
  const put=(x,y,cl,g,p)=>{x+=1;y+=1;if(x<0||y<0||x>=SW||y>=SH)return;const i=y*SW+x;col[i]=cl;part[i]=cl?[g,p||g]:null};
  const rect=(x0,y0,x1,y1,cl,g,p)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)put(x,y,cl,g,p)};
  const row=(y,x0,x1,cl,g,p)=>rect(x0,y,x1,y,cl,g,p);
- const fem=c.corpo==="f", h=c.cabelo;
+ const rows=(y0,sp,cl,g,p)=>sp.forEach((s,k)=>row(y0+k,s[0],s[1],cl,g,p));
+ const fem=c.corpo==="f", h=c.cabelo, top=c.top;
  const sk=rgb(byId(SKIN,c.pele).c), skD=mul(sk,.82), hc=rgb(c.corCabelo), hcD=mul(hc,.75), hl=mul(hc,1.22), tc=rgb(c.corTop), tcD=mul(tc,.78), bc=rgb(c.corBaixo), bcD=mul(bc,.8), sc=rgb(c.corTenis), hat=rgb(c.corChapeu), hatD=mul(hat,.72);
- const ink=[30,22,30], pink=[255,46,196];
- // legs: the far one peeks out behind the near one
- rect(10,39,14,57,mul(sk,.85),"leg","legB");rect(9,39,13,57,sk,"leg","legN");
- // body, neck, head
- rect(8,19,15,38,sk,"body");rect(11,16,14,18,skD,"neck");
- row(3,10,14,sk,"head");row(4,9,15,sk,"head");rect(8,5,16,13,sk,"head");row(14,9,16,sk,"head");row(15,10,15,sk,"head");row(16,11,14,sk,"head");
- rect(17,11,17,12,sk,"head");
- rect(11,10,11,11,skD,"head");
- // face
- const lip=mul(sk,.55),blush=[Math.min(255,sk[0]+16),Math.round(sk[1]*.86),Math.round(sk[2]*.9)];
- rect(15,10,15,11,ink,"head");row(8,14,15,hcD,"head");
- put(14,13,lip,"head");put(15,14,lip,"head");put(16,14,lip,"head");put(13,13,blush,"head");
- if(fem)put(16,9,ink,"head");
+ const ink=[30,22,30], pink=[255,46,196], white=[240,236,230];
+ const longSl=top==="moletom"||top==="jaqueta", eLong=fem?34:28;
+ // long hair: the lock on the far side sits behind the body
+ if(h==="comprido"&&!back)rect(3,10,4,eLong-6,hcD,"hairB");
+ // legs, torso, arms (skin under the clothes)
+ rect(7,49,12,68,sk,"leg","legL");rect(15,49,20,71,sk,"leg","legR");
+ rect(6,23,21,48,sk,"body");
+ put(4,24,sk,"arm","armL");row(25,3,4,sk,"arm","armL");rect(2,26,4,45,sk,"arm","armL");
+ put(23,24,sk,"arm","armR");row(25,23,24,sk,"arm","armR");rect(23,26,25,45,sk,"arm","armR");
+ // neck and head
+ rect(11,20,16,23,skD,"neck");
+ const HEAD=[[9,16],[7,18],[6,19],[5,20],[5,20],[4,20],[4,20],[4,20],[4,20],[4,20],[4,20],[4,20],[4,20],[4,20],[5,19],[6,18],[7,17],[9,15]];
+ rows(4,HEAD,sk,"head");
+ if(!back){
+  rect(17,13,18,15,skD,"ear");put(17,14,mul(sk,.65),"ear");
+  // face, turned a little to the left
+  const lip=mul(sk,.55),blush=[Math.min(255,sk[0]+16),Math.round(sk[1]*.86),Math.round(sk[2]*.9)];
+  rect(7,13,7,14,ink,"head");rect(11,13,12,14,ink,"head");
+  row(11,6,7,hcD,"head");row(11,10,13,hcD,"head");
+  put(8,16,skD,"head");put(9,17,skD,"head");
+  put(8,18,lip,"head");row(19,9,11,lip,"head");put(12,18,lip,"head");
+  put(14,17,blush,"head");put(15,17,blush,"head");
+  if(fem){put(6,12,ink,"head");put(13,12,ink,"head")}
+ }
  // bottoms
- if(c.baixo==="saia"){rect(8,35,15,38,bc,"bottom");rect(7,39,16,43,bc,"bottom");rect(6,44,17,46,bc,"bottom");for(const x of[8,11,14])rect(x,40,x,46,bcD,"bottom")}
- else{const end=c.baixo==="shorts"?45:56;rect(8,35,15,38,bc,"bottom","botN");rect(10,39,14,end,mul(bc,.8),"bottom","botB");rect(9,39,13,end,bc,"bottom","botN");
-  if(c.baixo==="shorts")row(end,9,13,bcD,"bottom","botN");else row(55,9,13,bcD,"bottom","botN");
-  row(35,8,15,bcD,"bottom","botN")}
- // shoes, toes pointing forward
- const sole=[232,226,216], boot=c.tenis==="bota", st=boot?51:56, scB=mul(sc,.8);
- rect(10,st,14,60,scB,"shoe","shoeB");rect(10,58,16,60,scB,"shoe","shoeB");row(61,10,16,boot?mul(sc,.45):mul(sole,.85),"shoe","shoeB");
- rect(9,st,13,60,sc,"shoe","shoeN");rect(9,58,15,60,sc,"shoe","shoeN");row(61,9,15,boot?mul(sc,.55):sole,"shoe","shoeN");
- if(boot)row(53,9,13,mul(sc,.8),"shoe","shoeN");else{row(57,11,12,[240,236,230],"shoe","shoeN");rect(14,59,15,60,mul(sc,1.3),"shoe","shoeN")}
- // tops
- const longSl=c.top==="moletom"||c.top==="jaqueta";let sl=0;
- if(c.top==="regata"){rect(9,22,14,36,tc,"top","torsoT");rect(11,19,13,21,tc,"top","torsoT")}
- else{const bot=c.top==="babytee"?30:(longSl?37:38);sl=longSl?34:(c.top==="babytee"?23:26);
-  rect(8,19,15,bot,tc,"top","torsoT");row(bot,8,15,tcD,"top","torsoT");
-  if(c.top==="camiseta"||c.top==="babytee")row(19,12,15,tcD,"top","torsoT");
-  if(c.top==="moletom"){rect(6,18,9,23,tcD,"top","hood");rect(13,30,15,33,tcD,"top","torsoT")}
-  if(c.top==="jaqueta"){rect(15,20,15,bot,[237,232,224],"inner");put(14,20,tcD,"top","torsoT")}}
- // feminine shape
- if(fem){rect(16,23,16,26,tc,"top","torsoT");put(16,26,mul(tc,.58),"top","torsoT");row(27,13,15,tcD,"top","torsoT");put(15,23,mul(tc,1.22),"top","torsoT");for(let y=28;y<=32;y++)put(15,y,null,null)}
- // arm hangs in front of the body
- rect(10,20,12,34,sk,"arm");row(19,10,12,sk,"arm");rect(10,35,12,37,sk,"hand");row(38,10,11,sk,"hand");
- if(sl){rect(10,20,12,sl,tc,"top","slv");row(19,10,12,tc,"top","slv");row(sl,10,12,tcD,"top","slv")}
+ if(c.baixo==="saia"){rows(48,[[6,21],[6,21],[6,21],[5,22],[5,22],[5,22],[5,22],[5,22],[4,23],[4,23],[4,23],[4,23],[4,23]],bc,"bottom");for(const x of[7,11,15,19])rect(x,52,x,60,bcD,"bottom");row(48,6,21,bcD,"bottom")}
+ else{const sh=c.baixo==="shorts",eL=sh?59:68,eR=sh?60:71;
+  rect(6,48,21,52,bc,"bottom","botL");rect(6,53,13,eL,bc,"bottom","botL");rect(14,53,21,eR,bc,"bottom","botR");
+  row(eL,6,13,bcD,"bottom","botL");row(eR,14,21,bcD,"bottom","botR");row(48,6,21,bcD,"bottom","botL")}
+ // shoes: chunky, toes pointing where the character looks
+ const boot=c.tenis==="bota", soleC=boot?mul(sc,.5):[232,226,216];
+ const shoe=(x0,x1,yT,yB,toe,pc)=>{rect(x0,yT,x1,yB,sc,"shoe",pc);if(!back)rect(toe,yB-2,x1,yB,sc,"shoe",pc);row(yB+1,back?x0:toe,x1,soleC,"shoe",pc);
+  if(boot)row(yT+2,x0,x1,mul(sc,.8),"shoe",pc);else if(!back){row(yB-4,x0+1,x0+3,white,"shoe",pc);rect(toe,yB-1,toe+1,yB,mul(sc,1.3),"shoe",pc)}};
+ shoe(6,13,boot?60:66,72,2,"shoeL");shoe(14,21,boot?63:69,75,10,"shoeR");
+ // tops: loose fit
+ if(top==="regata"){rect(6,26,21,47,tc,"top","torsoT");rect(8,23,9,25,tc,"top","torsoT");rect(18,23,19,25,tc,"top","torsoT");row(47,6,21,tcD,"top","torsoT");if(back)row(26,6,21,tc,"top","torsoT")}
+ else{const bot=top==="babytee"?38:48, sl=longSl?45:(top==="babytee"?30:35);
+  row(23,7,20,tc,"top","torsoT");rect(5,24,22,bot,tc,"top","torsoT");row(bot,5,22,tcD,"top","torsoT");
+  put(4,24,tc,"top","slvL");row(25,3,4,tc,"top","slvL");rect(2,26,4,sl,tc,"top","slvL");row(sl,2,4,tcD,"top","slvL");
+  put(23,24,tc,"top","slvR");row(25,23,24,tc,"top","slvR");rect(23,26,25,sl,tc,"top","slvR");row(sl,23,25,tcD,"top","slvR");
+  if(back){row(23,9,18,tcD,"top","torsoT");
+   if(top==="moletom")rows(21,[[10,17],[9,18],[8,19],[8,19],[8,19],[9,18],[10,17]],tcD,"top","hood");
+   if(top==="jaqueta")rect(13,25,13,bot-1,tcD,"top","torsoT")}
+  else{
+   if(top==="camiseta"||top==="babytee"){row(23,11,16,skD,"neck");put(10,23,tcD,"top","torsoT");put(17,23,tcD,"top","torsoT");row(24,11,16,tcD,"top","torsoT")}
+   if(top==="camiseta")rect(10,31,10,32,mul(tc,.6),"top","torsoT");
+   if(top==="moletom"){row(23,9,18,tcD,"top","hood");row(24,10,17,tcD,"top","hood");row(22,11,16,skD,"neck");rect(11,25,11,27,white,"top","torsoT");rect(15,25,15,27,white,"top","torsoT");rect(9,38,18,43,tcD,"top","torsoT");rect(10,39,17,43,tc,"top","torsoT")}
+   if(top==="jaqueta"){rect(10,23,14,bot,white,"inner");row(23,10,14,skD,"neck");rect(9,24,9,bot,tcD,"top","torsoT");rect(15,24,15,bot,tcD,"top","torsoT");row(bot,10,14,mul(white,.8),"inner")}
+  }}
+ // feminine shape: waist cut in, bust
+ if(fem){for(let y=31;y<=40;y++){put(5,y,null,null);put(22,y,null,null)}
+  if(!back){const bd=mul(tc,.58),bl=mul(tc,1.22);
+   row(33,7,11,bd,"top","torsoT");row(33,14,20,bd,"top","torsoT");put(12,32,bd,"top","torsoT");put(13,32,bd,"top","torsoT");put(12,31,tcD,"top","torsoT");
+   put(6,32,bd,"top","torsoT");put(21,32,bd,"top","torsoT");row(34,8,10,tcD,"top","torsoT");row(34,15,19,tcD,"top","torsoT");
+   put(9,30,bl,"top","torsoT");put(17,30,bl,"top","torsoT");put(18,30,bl,"top","torsoT")}}
+ // hands in front of the hem
+ rect(2,46,5,49,sk,"hand","handL");row(50,3,5,sk,"hand","handL");
+ rect(22,46,25,49,sk,"hand","handR");row(50,22,24,sk,"hand","handR");
  // hair
- const cap=()=>{row(2,10,14,hc,"hair");row(3,9,15,hc,"hair");rect(8,4,16,6,hc,"hair");row(6,9,15,hcD,"hair");row(4,11,13,hl,"hair")};
- if(h==="curto"){cap();row(7,14,16,hc,"hair");rect(8,7,10,12,hc,"hair");rect(11,7,12,8,hc,"hair")}
- if(h==="comprido"){const e=fem?27:22;cap();row(7,14,16,hc,"hair");rect(7,6,10,e,hc,"hair");rect(11,7,12,8,hc,"hair");rect(9,10,9,e-1,hcD,"hair");rect(7,9,7,e-4,hl,"hair");put(7,e,null,null)}
- if(h==="coque"){cap();put(16,7,hc,"hair");rect(8,7,10,11,hc,"hair");rect(11,7,12,8,hc,"hair");rect(5,1,8,4,hc,"hair","bun");put(5,1,null,null);put(5,4,null,null)}
- if(h==="cacheado"){for(const x of[8,10,12,14])put(x,1,hc,"hair");row(2,8,15,hc,"hair");rect(7,3,16,7,hc,"hair");rect(7,8,10,13,hc,"hair");rect(11,8,12,8,hc,"hair");for(const [x,y] of[[8,3],[11,4],[14,3],[9,6],[13,6],[15,5],[8,9],[9,11],[8,12]])put(x,y,hcD,"hair")}
- if(h==="blackpower"){for(let y=0;y<=13;y++){const hw=Math.round(Math.sqrt(Math.max(0,49-(y-6)*(y-6)))*1.15);row(y,Math.max(2,11-hw),Math.min(y>=8?10:18,10+hw),hc,"hair")}for(const [x,y] of[[9,2],[13,3],[10,5],[15,5],[7,4],[6,8],[8,10],[9,12]])put(x,y,hcD,"hair")}
- if(h==="raspado"){row(3,10,14,hcD,"hair");rect(8,4,15,5,hcD,"hair");rect(8,6,10,10,hcD,"hair");rect(11,6,12,7,hcD,"hair")}
+ const DOME=[[9,16],[7,18],[6,19],[5,20],[4,21],[4,21]];
+ const afro=full=>{for(let y=-1;y<=16;y++){const hw=Math.sqrt(Math.max(0,110-(y-6.5)*(y-6.5)));if(!hw)continue;const x0=Math.round(12.5-hw),x1=Math.round(12.5+hw);
+   if(full||y<9)row(y,x0,x1,hc,"hair");else{if(x0<=3)row(y,x0,3,hc,"hair");row(y,Math.max(16,x0),x1,hc,"hair")}}
+  for(const [x,y] of[[7,1],[12,0],[17,2],[4,5],[9,4],[14,3],[19,6],[21,10],[18,12],[3,9],[10,7],[16,7]])put(x,y,hcD,"hair")};
+ const curls=()=>{rows(1,[[8,10],[6,19],[5,21],[4,22],[4,22],[3,22],[3,22],[3,22]],hc,"hair");row(1,13,15,hc,"hair");put(17,1,hc,"hair");put(18,1,hc,"hair")};
+ const dots=[[7,4],[11,3],[15,4],[19,5],[5,7],[9,7],[13,6],[17,8],[21,8],[18,11],[20,14],[5,10]];
+ if(!back){
+  if(h==="curto"||h==="comprido"||h==="coque"){rows(3,DOME,hc,"hair");row(9,4,13,hc,"hair");row(10,4,6,hc,"hair");put(4,11,hc,"hair");
+   rect(16,9,21,12,hc,"hair");rect(19,13,21,h==="coque"?13:16,hc,"hair");row(5,9,13,hl,"hair");row(9,16,21,hcD,"hair");put(9,10,hc,"hair");put(10,10,hc,"hair")}
+  if(h==="comprido"){rect(18,13,23,eLong,hc,"hair","hairL");rect(20,15,20,eLong-2,hcD,"hair","hairL");rect(22,14,22,eLong-3,hl,"hair","hairL");put(23,eLong,null,null);put(18,eLong,null,null);put(23,13,null,null)}
+  if(h==="coque")rows(0,[[15,19],[14,20],[14,20],[15,19]],hc,"hair","bun");
+  if(h==="cacheado"){curls();row(9,3,13,hc,"hair");row(10,3,6,hc,"hair");rect(16,9,22,16,hc,"hair");row(17,17,21,hc,"hair");for(const [x,y] of dots)put(x,y,hcD,"hair")}
+  if(h==="blackpower")afro(false);
+  if(h==="raspado"){rows(4,[[9,16],[7,18],[6,19],[5,20],[5,20]],hcD,"hair");rect(16,9,20,11,hcD,"hair")}
+ }else{
+  if(h==="curto"||h==="comprido"||h==="coque"){rows(3,DOME,hc,"hair");rect(4,9,21,15,hc,"hair");row(16,5,20,hc,"hair");row(17,7,18,hc,"hair");row(5,9,13,hl,"hair");for(const [x,y] of[[8,10],[13,12],[17,9],[10,14],[15,15]])put(x,y,hcD,"hair")}
+  if(h==="comprido"){rect(3,10,22,eLong,hc,"hair");for(const x of[6,10,14,18])rect(x,12,x,eLong-1,hcD,"hair");rect(4,11,4,eLong-4,hl,"hair");put(3,eLong,null,null);put(22,eLong,null,null)}
+  if(h==="coque")rows(0,[[10,15],[9,16],[9,16],[10,15]],hc,"hair","bun");
+  if(h==="cacheado"){curls();rect(3,9,22,17,hc,"hair");row(18,5,20,hc,"hair");for(const [x,y] of dots.concat([[8,12],[12,15],[16,13],[6,16],[11,10]]))put(x,y,hcD,"hair")}
+  if(h==="blackpower")afro(true);
+  if(h==="raspado")rows(4,HEAD.slice(0,12),hcD,"hair");
+ }
  // hats
- if(c.chapeu==="bone"){row(0,10,14,hat,"hat");row(1,9,15,hat,"hat");rect(8,2,16,6,hat,"hat");row(6,8,16,hatD,"hat");rect(16,6,21,7,hatD,"brim");put(21,6,null,null);row(7,16,21,mul(hat,.55),"brim");put(13,3,pink,"hat");put(14,3,pink,"hat");row(2,10,12,mul(hat,1.2),"hat")}
- if(c.chapeu==="gorro"){row(-1,11,13,hat,"hat");row(0,9,15,hat,"hat");rect(8,1,16,5,hat,"hat");rect(7,5,17,7,hatD,"hat","cuff");for(let x=8;x<=16;x+=2)rect(x,5,x,7,mul(hat,.6),"hat","cuff");row(1,10,12,mul(hat,1.2),"hat")}
+ if(c.chapeu==="bone"){rows(2,[[9,17],[7,19],[6,20],[5,21],[5,21],[4,21],[4,21]],hat,"hat");row(9,4,21,hatD,"hat");row(4,9,13,mul(hat,1.2),"hat");
+  if(back){rect(11,7,14,8,h==="careca"?sk:hc,"hat");row(9,11,14,mul(hat,.5),"hat")}
+  else{row(9,1,9,hat,"brim");row(10,0,9,hatD,"brim");row(11,1,8,mul(hat,.55),"brim");rect(8,5,10,6,pink,"hat")}}
+ if(c.chapeu==="gorro"){rows(1,[[9,16],[7,18],[6,19],[5,20],[4,21],[4,21],[4,21]],hat,"hat");rect(3,8,22,10,hatD,"hat","cuff");for(let x=4;x<=22;x+=2)rect(x,8,x,10,mul(hat,.6),"hat","cuff");row(3,9,12,mul(hat,1.2),"hat")}
  // glasses
- if(c.oculos==="escuros"){const g=[26,24,30];rect(14,9,16,11,g,"glass","glL");put(17,9,g,"glass","glL");row(9,11,13,g,"glass","glL");put(15,9,[110,118,140],"glass","glL")}
- if(c.oculos==="grau"){const g=[40,34,44];row(9,14,17,g,"glass","glL");row(12,14,16,g,"glass","glL");rect(14,10,14,11,g,"glass","glL");rect(17,10,17,10,g,"glass","glL");row(10,11,13,g,"glass","glL")}
+ if(!back&&c.oculos==="escuros"){const g=[26,24,30];rect(5,12,7,15,g,"glass","glL");rect(9,12,14,15,g,"glass","glR");put(8,12,g,"glass","glB");row(12,15,18,g,"glass","glR");put(6,13,[110,118,140],"glass","glL");put(10,13,[110,118,140],"glass","glR");put(11,13,[110,118,140],"glass","glR")}
+ if(!back&&c.oculos==="grau"){const g=[40,34,44],fr=(x0,x1,p)=>{row(12,x0,x1,g,"glass",p);row(15,x0,x1,g,"glass",p);rect(x0,13,x0,14,g,"glass",p);rect(x1,13,x1,14,g,"glass",p)};fr(5,8,"glL");fr(9,14,"glR");row(12,15,18,g,"glass","glR")}
  return {col,part};
 }
 function flip(s){const col=[],part=[];for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){const j=y*SW+SW-1-x;col.push(s.col[j]);part.push(s.part[j])}return{col,part}}
-/* chunkier proportions: take 6 rows out of the legs so the head reads bigger; feet stay on the ground */
-const CUT0=48, CUT1=53;
-function squash(s){const n=CUT1-CUT0+1,col=new Array(SW*SH).fill(null),part=new Array(SW*SH).fill(null);
- for(let y=0;y<SH;y++){if(y>=CUT0&&y<=CUT1)continue;const ny=y<CUT0?y+n:y;for(let x=0;x<SW;x++){col[ny*SW+x]=s.col[y*SW+x];part[ny*SW+x]=s.part[y*SW+x]}}
- return{col,part}}
 /* shading + seams + outline on any grid size */
 function finish(col,part,SW,SH){
  const out=col.map(v=>v&&v.slice());
@@ -385,7 +311,7 @@ function scale2x(px,W,H){const out=new Array(W*H*4).fill(null),k=v=>v?v.join():"
  return out}
 const PX_NAMES={1:"Bem pixelado",2:"Padrão",3:"Suave",4:"Bem suave"};
 let pxLevel=2;try{const v=+localStorage.getItem("vbz-atelie-pixel");if(PX_NAMES[v])pxLevel=v}catch(e){}
-function pixels(c,level,view){view=+view||0;let s=view===1||view===3?spriteSide(c):sprite(c,view===2);if(view===3)s=flip(s);s=squash(s);if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
+function pixels(c,level,view){view=+view||0;let s=sprite(c,view>=2);if(view===1||view===3)s=flip(s);if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
  let px=finish(s.col,s.part,SW,SH),W=SW,H=SH;for(let i=2;i<level;i++){px=scale2x(px,W,H);W*=2;H*=2}return{px,W,H}}
 function spriteCanvas(c,crop,level,back){
  const r=pixels(c,crop?2:(level||pxLevel),back),px=r.px,SW=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
@@ -425,14 +351,14 @@ function renderCast(){
   const g=document.createElement("div");g.className="cgroup";
   for(const [id,c] of items){
    const b=document.createElement("button");b.type="button";b.className="card"+(id===cur?" on":"");b.setAttribute("aria-current",id===cur?"true":"false");
-   const th=document.createElement("span");th.className="thumb";th.append(spriteCanvas(c,[2,6,22,22]));b.append(th);
+   const th=document.createElement("span");th.className="thumb";th.append(spriteCanvas(c,[1,0,25,25]));b.append(th);
    const d=document.createElement("div");const n=document.createElement("div");n.className="nm";n.textContent=c.nome||"sem nome";const r=document.createElement("div");r.className="rl";r.textContent=c.tipo==="npc"?(c.papel||"NPC")+" · "+byId(PLACES,c.local).n:"Avatar inicial";d.append(n,r);b.append(d);
    b.onclick=()=>select(id);g.append(b);
   }
   el.append(g);
  }
 }
-let view=0;const VIEWS=["de frente","de lado (direita)","de costas","de lado (esquerda)"];
+let view=0;const VIEWS=["de frente","de frente, pro outro lado","de costas","de costas, pro outro lado"];
 function showTurn(){const b=document.getElementById("btnTurn");b.textContent="↻ Virar · vendo "+VIEWS[view];b.setAttribute("aria-pressed",view>0)}
 function renderPreview(){
  const c=chars[cur];const pv=document.getElementById("preview");pv.textContent="";
@@ -522,12 +448,12 @@ document.getElementById("btnNew").onclick=()=>create();
 document.getElementById("btnImport").onclick=openImport;
 /* pixelation slider: one setting for the whole cast, saved with it so Claude can read it */
 const pxRange=document.getElementById("pxRange");let pxTimer=null;
-function showPx(){pxRange.value=pxLevel;document.getElementById("pxName").textContent=PX_NAMES[pxLevel]+" · "+(pxLevel<=1?"13 × 33":SW*2**(pxLevel-2)+" × "+SH*2**(pxLevel-2))+" pixels"}
+function showPx(){pxRange.value=pxLevel;document.getElementById("pxName").textContent=PX_NAMES[pxLevel]+" · "+(pxLevel<=1?(SW/2)+" × "+(SH/2):SW*2**(pxLevel-2)+" × "+SH*2**(pxLevel-2))+" pixels"}
 pxRange.oninput=()=>{pxLevel=Math.max(1,Math.min(4,+pxRange.value||2));showPx();renderPreview();try{localStorage.setItem("vbz-atelie-pixel",pxLevel)}catch(e){}
  clearTimeout(pxTimer);pxTimer=setTimeout(async()=>{if(mode==="db"){try{await db.doc("config/estilo").set({pixel:pxLevel});setStatus("Salvo na nuvem",true)}catch(e){}}},600)};
 showPx();
 const zmRange=document.getElementById("zmRange");let zoom=3;try{const v=+localStorage.getItem("vbz-atelie-zoom");if(v>=1&&v<=6)zoom=v}catch(e){}
-function showZoom(){zmRange.value=zoom;document.getElementById("zmName").textContent=zoom+"× · "+SH*zoom+" px de altura";document.getElementById("preview").style.setProperty("--zh",SH*zoom+"px")}
+function showZoom(){zmRange.value=zoom;document.getElementById("zmName").textContent=zoom+"× · "+66*zoom+" px de altura";document.getElementById("preview").style.setProperty("--zh",66*zoom+"px")}
 document.getElementById("btnTurn").onclick=()=>{view=(view+1)%4;renderPreview()};
 zmRange.oninput=()=>{zoom=Math.max(1,Math.min(6,+zmRange.value||3));showZoom();try{localStorage.setItem("vbz-atelie-zoom",zoom)}catch(e){}};
 showZoom();
