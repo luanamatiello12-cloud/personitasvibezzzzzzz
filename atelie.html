@@ -57,6 +57,7 @@ button{font:inherit;cursor:pointer;color:inherit}
 .floor canvas{position:relative;z-index:1;height:var(--zh,198px);max-width:100%;width:auto;image-rendering:pixelated;image-rendering:crisp-edges}
 .pxctl{padding:12px 14px 4px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--line)}
 .pxctl label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.btn.turn{margin:6px 0 8px;font-size:13px;cursor:pointer}
 .pxrow{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
 .pxrow input{flex:1;accent-color:var(--pink);min-width:0}
 .plate{padding:12px 14px;display:flex;flex-direction:column;gap:4px}
@@ -129,6 +130,7 @@ textarea{resize:vertical;min-height:58px}
         <label for="zmRange">Tamanho na tela</label>
         <div class="pxrow"><span>menor</span><input type="range" id="zmRange" min="1" max="6" step="1" value="3"><span>maior</span></div>
         <div class="hint" id="zmName">3×</div>
+        <button class="btn turn" id="btnTurn" type="button" aria-pressed="false">↻ Virar · vendo de frente</button>
       </div>
       <div class="plate">
         <div class="h"><span class="handle" id="pHandle">—</span><span class="tag" id="pTag">NPC</span></div>
@@ -172,7 +174,7 @@ function clean(r){const d=defaults(),o={...d,...(r&&typeof r==="object"?r:{})};
 const SW=26, SH=66, OUT=[27,17,32];
 const rgb=h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
 const mul=(c,k)=>c.map(v=>Math.max(0,Math.min(255,Math.round(k<1?v*k:v+(255-v)*(k-1)))));
-function sprite(c){
+function sprite(c,back){
  const col=new Array(SW*SH).fill(null), part=new Array(SW*SH).fill(null);
  // part = [garment, piece]: seams appear between pieces side by side, and between garments top/bottom
  const put=(x,y,cl,g,p)=>{x+=1;y+=1;if(x<0||y<0||x>=SW||y>=SH)return;const i=y*SW+x;col[i]=cl;part[i]=[g,p||g]};
@@ -202,13 +204,14 @@ function sprite(c){
  // face
  const ink=[30,22,30];
  const shine=[255,255,255];
+ if(!back){
  put(9,10,shine,"head");put(10,10,ink,"head");rect(9,11,10,11,ink,"head");
  put(13,10,shine,"head");put(14,10,ink,"head");rect(13,11,14,11,ink,"head");
  row(8,9,10,hcD,"head");row(8,13,14,hcD,"head");
  const lip=mul(sk,.55),blush=[Math.min(255,sk[0]+16),Math.round(sk[1]*.86),Math.round(sk[2]*.9)];
  put(12,12,skD,"head");put(10,13,lip,"head");put(13,13,lip,"head");put(11,14,lip,"head");put(12,14,lip,"head");
  put(8,13,blush,"head");put(15,13,blush,"head");
- if(fem){put(8,9,ink,"head");put(15,9,ink,"head")}
+ if(fem){put(8,9,ink,"head");put(15,9,ink,"head")}}
  // bottoms
  if(c.baixo==="saia"){rect(T[0],35,T[1],38,bc,"bottom");rect(T[0]-1,39,T[1]+1,43,bc,"bottom");rect(T[0]-2,44,T[1]+2,46,bc,"bottom");for(let x=T[0];x<=T[1];x+=3)rect(x,40,x,46,bcD,"bottom")}
  else{const end=c.baixo==="shorts"?45:56;rect(T[0],35,11,38,bc,"bottom","botL");rect(12,35,T[1],38,bc,"bottom","botL");rect(LL[0],39,LL[1],end,bc,"bottom","botL");rect(LR[0],39,LR[1],end,bc,"bottom","botR");
@@ -218,7 +221,7 @@ function sprite(c){
  // shoes
  const sole=[232,226,216];
  if(c.tenis==="bota"){rect(LL[0],51,LL[1],60,sc,"shoe","shoeL");rect(LR[0],51,LR[1],60,sc,"shoe","shoeR");rect(LL[0]-1,58,LL[1],60,sc,"shoe","shoeL");rect(LR[0],58,LR[1]+1,60,sc,"shoe","shoeR");row(61,LL[0]-1,LL[1],mul(sc,.55),"shoe","shoeL");row(61,LR[0],LR[1]+1,mul(sc,.55),"shoe","shoeR");row(53,LL[0],LL[1],mul(sc,.8),"shoe","shoeL");row(53,LR[0],LR[1],mul(sc,.8),"shoe","shoeR")}
- else{rect(LL[0],56,LL[1],60,sc,"shoe","shoeL");rect(LR[0],56,LR[1],60,sc,"shoe","shoeR");rect(LL[0]-1,58,LL[1],60,sc,"shoe","shoeL");rect(LR[0],58,LR[1]+1,60,sc,"shoe","shoeR");row(61,LL[0]-1,LL[1],sole,"shoe","shoeL");row(61,LR[0],LR[1]+1,sole,"shoe","shoeR");const lace=[240,236,230],cap=mul(sc,1.3);row(57,LL[0]+1,LL[0]+2,lace,"shoe","shoeL");row(57,LR[1]-2,LR[1]-1,lace,"shoe","shoeR");rect(LL[0]-1,59,LL[0],60,cap,"shoe","shoeL");rect(LR[1],59,LR[1]+1,60,cap,"shoe","shoeR")}
+ else{rect(LL[0],56,LL[1],60,sc,"shoe","shoeL");rect(LR[0],56,LR[1],60,sc,"shoe","shoeR");rect(LL[0]-1,58,LL[1],60,sc,"shoe","shoeL");rect(LR[0],58,LR[1]+1,60,sc,"shoe","shoeR");row(61,LL[0]-1,LL[1],sole,"shoe","shoeL");row(61,LR[0],LR[1]+1,sole,"shoe","shoeR");const lace=[240,236,230],cap=mul(sc,1.3);if(!back){row(57,LL[0]+1,LL[0]+2,lace,"shoe","shoeL");row(57,LR[1]-2,LR[1]-1,lace,"shoe","shoeR");rect(LL[0]-1,59,LL[0],60,cap,"shoe","shoeL");rect(LR[1],59,LR[1]+1,60,cap,"shoe","shoeR")}}
  // tops
  const longSl=c.top==="moletom"||c.top==="jaqueta";
  if(c.top==="regata"){rect(T[0]+1,22,T[1]-1,36,tc,"top");rect(T[0]+1,19,T[0]+2,21,tc,"top");rect(T[1]-2,19,T[1]-1,21,tc,"top")}
@@ -231,20 +234,25 @@ function sprite(c){
   if(longSl){row(34,AL[0],AL[1],tcD,"top","slvL");row(34,AR[0],AR[1],tcD,"top","slvR");row(bot,T[0],T[1],tcD,"top","torsoT")}
   else{row(sl,AL[0],AL[1],tcD,"top","slvL");row(sl,AR[0],AR[1],tcD,"top","slvR")}
   // collar
+  if(back){row(19,9,14,tcD,"top","torsoT");row(bot,T[0],T[1],tcD,"top","torsoT");if(c.top==="moletom"){rect(8,19,15,24,tcD,"top","hood");row(25,9,14,tcD,"top","hood")}if(c.top==="jaqueta")rect(11,22,12,bot-1,tcD,"top","torsoT")}else{
   row(19,10,13,skD,"neck");put(11,20,skD,"neck");put(12,20,skD,"neck");
   if(c.top==="camiseta"||c.top==="babytee"){put(14,25,mul(tc,.6),"top","torsoT");
    for(const [x,y] of[[9,19],[14,19],[10,20],[13,20],[11,21],[12,21]])put(x,y,tcD,"top","torsoT");
    row(bot,T[0],T[1],tcD,"top","torsoT");
    if(c.top==="camiseta"){put(T[0]+2,33,tcD,"top","torsoT");put(T[0]+3,34,tcD,"top","torsoT");put(T[1]-2,30,tcD,"top","torsoT");put(T[1]-3,31,tcD,"top","torsoT")}}
   if(c.top==="moletom"){row(18,9,14,tcD,"top","hood");put(9,19,tcD,"top","hood");put(14,19,tcD,"top","hood");rect(9,30,14,33,tcD,"top","torsoT");put(11,21,[240,236,230],"top","torsoT");put(12,22,[240,236,230],"top","torsoT")}
-  if(c.top==="jaqueta"){rect(11,20,12,bot,[237,232,224],"inner");put(10,20,tcD,"top","torsoT");put(13,20,tcD,"top","torsoT");put(8,31,tcD,"top","torsoT");put(15,31,tcD,"top","torsoT")}
+  if(c.top==="jaqueta"){rect(11,20,12,bot,[237,232,224],"inner");put(10,20,tcD,"top","torsoT");put(13,20,tcD,"top","torsoT");put(8,31,tcD,"top","torsoT");put(15,31,tcD,"top","torsoT")}}
  }
  // feminine shape: waist cut in, bust line, hips left wide
  if(fem){for(let y=27;y<=32;y++){put(T[0],y,null,null);put(T[1],y,null,null)}
+  if(!back){
   const bs=c.top==="regata"||c.top==="camiseta"||c.top==="babytee"||longSl?tcD:skD;
-  for(const x of[T[0]+1,T[0]+2,T[0]+3,T[1]-3,T[1]-2,T[1]-1])put(x,26,bs,"top","torsoT");
-  put(T[0]+4,25,bs,"top","torsoT");put(T[1]-4,25,bs,"top","torsoT");
-  put(T[0]+1,29,bs,"top","torsoT");put(T[1]-1,29,bs,"top","torsoT")}
+  const bd=mul(tc,.58),bl=mul(tc,1.22);
+  for(const x of[T[0]+1,T[0]+2,T[0]+3,T[1]-3,T[1]-2,T[1]-1]){put(x,26,bd,"top","torsoT");put(x,27,bs,"top","torsoT")}
+  put(T[0]+4,25,bd,"top","torsoT");put(T[1]-4,25,bd,"top","torsoT");put(T[0]+4,24,bs,"top","torsoT");put(T[1]-4,24,bs,"top","torsoT");
+  rect(T[0]+1,23,T[0]+2,24,bl,"top","torsoT");rect(T[1]-3,23,T[1]-2,24,bl,"top","torsoT");
+  put(T[0]+3,25,bs,"top","torsoT");put(T[1]-1,25,bs,"top","torsoT");
+  put(T[0]+1,29,bs,"top","torsoT");put(T[1]-1,29,bs,"top","torsoT")}}
  // front hair
  const h=c.cabelo;
  if(h==="curto"||h==="comprido"||h==="coque"){
@@ -259,12 +267,21 @@ function sprite(c){
  if(h==="cacheado"){for(const x of[8,10,12,14])put(x,1,hc,"hair");row(2,7,16,hc,"hair");rect(6,3,17,7,hc,"hair");row(8,6,8,hc,"hair");row(8,15,17,hc,"hair");rect(6,9,6,11,hc,"hair");rect(17,9,17,11,hc,"hair");for(const [x,y] of[[8,3],[11,4],[14,3],[9,6],[13,6],[16,5],[7,5]])put(x,y,hcD,"hair")}
  if(h==="blackpower"){rect(7,1,16,6,hc,"hair");row(7,7,9,hc,"hair");row(7,14,16,hc,"hair");for(const [x,y] of[[9,2],[13,3],[10,5],[15,5],[8,4]])put(x,y,hcD,"hair")}
  if(h==="raspado"){row(3,9,14,hcD,"hair");rect(8,4,15,5,hcD,"hair");put(7,6,hcD,"hair");put(16,6,hcD,"hair")}
+ // back of the head
+ if(back){const hl=mul(hc,1.2);
+  if(h==="curto"){rect(7,4,16,11,hc,"hair");row(12,8,15,hc,"hair");row(13,10,13,hcD,"hair");for(const [x,y] of[[9,8],[12,9],[14,7],[10,11]])put(x,y,hcD,"hair");row(5,9,11,hl,"hair")}
+  if(h==="comprido"){const e=fem?27:22;rect(7,3,16,6,hc,"hair");rect(6,6,17,e,hc,"hair");for(const x of[9,12,15])rect(x,9,x,e-1,hcD,"hair");rect(7,8,7,e-4,hl,"hair");put(6,e,null,null);put(17,e,null,null)}
+  if(h==="coque"){rect(7,4,16,10,hc,"hair");row(11,8,15,hc,"hair");row(12,10,13,hcD,"hair");for(const x of[9,11,13,15])put(x,6,hcD,"hair")}
+  if(h==="cacheado"){rect(6,3,17,12,hc,"hair");row(13,7,16,hc,"hair");for(const [x,y] of[[8,8],[11,9],[14,8],[9,11],[13,11],[16,10],[7,10],[10,13],[15,12]])put(x,y,hcD,"hair")}
+  if(h==="blackpower"){for(let y=0;y<=13;y++){const hw=Math.round(Math.sqrt(Math.max(0,49-(y-6)*(y-6)))*1.15);row(y,Math.max(3,12-hw),Math.min(20,11+hw),hc,"hair")}for(const [x,y] of[[9,2],[13,3],[10,5],[15,5],[8,4],[6,8],[12,9],[16,10],[9,11]])put(x,y,hcD,"hair")}
+  if(h==="raspado"){row(3,9,14,hcD,"hair");rect(7,4,16,9,hcD,"hair");row(10,8,15,hcD,"hair")}
+ }
  // hats
- if(c.chapeu==="bone"){row(0,9,14,hat,"hat");row(1,8,15,hat,"hat");rect(7,2,16,6,hat,"hat");row(6,7,16,hatD,"hat");rect(3,6,8,7,hatD,"brim");put(3,6,null,null);row(7,3,8,mul(hat,.55),"brim");put(12,3,[255,46,196],"hat");put(13,3,[255,46,196],"hat");row(2,9,11,mul(hat,1.2),"hat")}
+ if(c.chapeu==="bone"){row(0,9,14,hat,"hat");row(1,8,15,hat,"hat");rect(7,2,16,6,hat,"hat");row(6,7,16,hatD,"hat");if(back){row(5,10,13,mul(hat,.5),"hat");row(6,10,13,h==="careca"?sk:hc,"hat");put(11,4,mul(hat,.5),"hat");put(12,4,mul(hat,.5),"hat")}else{rect(3,6,8,7,hatD,"brim");put(3,6,null,null);row(7,3,8,mul(hat,.55),"brim");put(12,3,[255,46,196],"hat");put(13,3,[255,46,196],"hat")}row(2,9,11,mul(hat,1.2),"hat")}
  if(c.chapeu==="gorro"){row(-1,10,13,hat,"hat");row(0,8,15,hat,"hat");rect(7,1,16,5,hat,"hat");rect(6,5,17,7,hatD,"hat","cuff");for(let x=7;x<=16;x+=2)rect(x,5,x,7,mul(hat,.6),"hat","cuff");row(1,9,11,mul(hat,1.2),"hat")}
  // glasses
- if(c.oculos==="escuros"){const g=[26,24,30];rect(8,9,11,11,g,"glass","glL");rect(13,9,16,11,g,"glass","glR");put(12,9,g,"glass","glB");put(7,9,g,"glass","glL");put(9,9,[110,118,140],"glass","glL");put(14,9,[110,118,140],"glass","glR")}
- if(c.oculos==="grau"){const g=[40,34,44];row(9,8,11,g,"glass","glL");row(12,8,11,g,"glass","glL");rect(8,10,8,11,g,"glass","glL");rect(11,10,11,11,g,"glass","glL");row(9,13,16,g,"glass","glR");row(12,13,16,g,"glass","glR");rect(13,10,13,11,g,"glass","glR");rect(16,10,16,11,g,"glass","glR");put(12,10,g,"glass","glB");put(7,10,g,"glass","glL")}
+ if(!back&&c.oculos==="escuros"){const g=[26,24,30];rect(8,9,11,11,g,"glass","glL");rect(13,9,16,11,g,"glass","glR");put(12,9,g,"glass","glB");put(7,9,g,"glass","glL");put(9,9,[110,118,140],"glass","glL");put(14,9,[110,118,140],"glass","glR")}
+ if(!back&&c.oculos==="grau"){const g=[40,34,44];row(9,8,11,g,"glass","glL");row(12,8,11,g,"glass","glL");rect(8,10,8,11,g,"glass","glL");rect(11,10,11,11,g,"glass","glL");row(9,13,16,g,"glass","glR");row(12,13,16,g,"glass","glR");rect(13,10,13,11,g,"glass","glR");rect(16,10,16,11,g,"glass","glR");put(12,10,g,"glass","glB");put(7,10,g,"glass","glL")}
  return {col,part};
 }
 /* shading + seams + outline on any grid size */
@@ -303,10 +320,10 @@ function scale2x(px,W,H){const out=new Array(W*H*4).fill(null),k=v=>v?v.join():"
  return out}
 const PX_NAMES={1:"Bem pixelado",2:"Padrão",3:"Suave",4:"Bem suave"};
 let pxLevel=2;try{const v=+localStorage.getItem("vbz-atelie-pixel");if(PX_NAMES[v])pxLevel=v}catch(e){}
-function pixels(c,level){const s=sprite(c);if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
+function pixels(c,level,back){const s=sprite(c,back);if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
  let px=finish(s.col,s.part,SW,SH),W=SW,H=SH;for(let i=2;i<level;i++){px=scale2x(px,W,H);W*=2;H*=2}return{px,W,H}}
-function spriteCanvas(c,crop,level){
- const r=pixels(c,crop?2:(level||pxLevel)),px=r.px,SW=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
+function spriteCanvas(c,crop,level,back){
+ const r=pixels(c,crop?2:(level||pxLevel),back),px=r.px,SW=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
  const cv=document.createElement("canvas");cv.width=w;cv.height=h;const ctx=cv.getContext("2d");const img=ctx.createImageData(w,h);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=px[(y+y0)*SW+(x+x0)];if(!v)continue;const o=(y*w+x)*4;img.data[o]=v[0];img.data[o+1]=v[1];img.data[o+2]=v[2];img.data[o+3]=v[3]||255}
  ctx.putImageData(img,0,0);cv.setAttribute("role","img");cv.setAttribute("aria-label","Sprite de "+(c.nome||"personagem"));return cv}
@@ -350,10 +367,12 @@ function renderCast(){
   el.append(g);
  }
 }
+let viewBack=false;
+function showTurn(){const b=document.getElementById("btnTurn");b.textContent=viewBack?"↻ Virar · vendo de costas":"↻ Virar · vendo de frente";b.setAttribute("aria-pressed",viewBack)}
 function renderPreview(){
  const c=chars[cur];const pv=document.getElementById("preview");pv.textContent="";
  if(!c){["pHandle","pRole","pLine"].forEach(i=>document.getElementById(i).textContent="");return}
- pv.append(spriteCanvas(c));
+ pv.append(spriteCanvas(c,null,0,viewBack));showTurn();
  document.getElementById("pHandle").textContent=c.nome||"sem nome";
  const tag=document.getElementById("pTag");tag.textContent=c.tipo==="npc"?"NPC":"Avatar jogável";tag.classList.toggle("avatar",c.tipo==="avatar");
  document.getElementById("pRole").textContent=c.tipo==="npc"?[c.papel,byId(PLACES,c.local).n,byId(DOES,c.faz).n].filter(Boolean).join(" · "):"Opção de personagem para quem entra no jogo";
@@ -444,6 +463,7 @@ pxRange.oninput=()=>{pxLevel=Math.max(1,Math.min(4,+pxRange.value||2));showPx();
 showPx();
 const zmRange=document.getElementById("zmRange");let zoom=3;try{const v=+localStorage.getItem("vbz-atelie-zoom");if(v>=1&&v<=6)zoom=v}catch(e){}
 function showZoom(){zmRange.value=zoom;document.getElementById("zmName").textContent=zoom+"× · "+SH*zoom+" px de altura";document.getElementById("preview").style.setProperty("--zh",SH*zoom+"px")}
+document.getElementById("btnTurn").onclick=()=>{viewBack=!viewBack;renderPreview()};
 zmRange.oninput=()=>{zoom=Math.max(1,Math.min(6,+zmRange.value||3));showZoom();try{localStorage.setItem("vbz-atelie-zoom",zoom)}catch(e){}};
 showZoom();
 
