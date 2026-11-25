@@ -152,6 +152,8 @@ const BOTTOMS=[{id:"calca",n:"Calça"},{id:"shorts",n:"Shorts"},{id:"saia",n:"Sa
 const HEIGHTS=[{id:"baixinho",n:"Baixinho"},{id:"medio",n:"Médio"},{id:"alto",n:"Alto"}];
 const WIDTHS=[{id:"normal",n:"Normal"},{id:"largo",n:"Largo"}];
 const ARMS=[{id:"normal",n:"Normais"},{id:"fino",n:"Finos"},{id:"afunilado",n:"Antebraço fino"},{id:"aberto",n:"Afastados"}];
+const LEGS=[{id:"normal",n:"Normais"},{id:"finas",n:"Finas"},{id:"afuniladas",n:"Afuniladas"},{id:"afastadas",n:"Afastadas"}];
+const TORSOS=[{id:"reto",n:"Reto"},{id:"cintura",n:"Com cintura"}];
 const SHOES=[{id:"tenis",n:"Tênis"},{id:"bota",n:"Bota"}];
 const HAIRC=[{id:"2A1E1A",n:"Preto"},{id:"6B4026",n:"Castanho"},{id:"9A5B2E",n:"Castanho claro"},{id:"D9B060",n:"Loiro"},{id:"B5562B",n:"Ruivo"},{id:"9A98A0",n:"Grisalho"},{id:"E070B0",n:"Rosa"},{id:"7A3FB0",n:"Roxo"},{id:"3C5BB0",n:"Azul"},{id:"E8E2D8",n:"Platinado"}];
 const CLOTH=[{id:"D9852B",n:"Laranja"},{id:"2F3352",n:"Marinho"},{id:"2A2630",n:"Preto"},{id:"EDE8E0",n:"Branco"},{id:"7D7A86",n:"Cinza"},{id:"B8323A",n:"Vermelho"},{id:"FF2EC4",n:"Vibe Pink"},{id:"7A00FF",n:"Vibe Purple"},{id:"3D6FB8",n:"Azul"},{id:"3E7A4A",n:"Verde"},{id:"E8C140",n:"Amarelo"},{id:"C9B08A",n:"Bege"},{id:"5A3A2A",n:"Marrom"},{id:"A3287B",n:"Magenta"}];
@@ -161,10 +163,10 @@ const ACTIONS=[{id:"nenhuma",n:"Só cumprimenta"},{id:"loja",n:"Abre a loja"},{i
 
 const byId=(list,id,fb)=>list.find(x=>x.id===id)||list.find(x=>x.id===fb)||list[0];
 const HEXOK=s=>/^[0-9A-F]{6}$/i.test(s||"");
-function defaults(){return{nome:"novo.vbz",tipo:"npc",papel:"",corpo:"m",altura:"baixinho",largura:"normal",bracos:"normal",pele:"media",cabelo:"curto",corCabelo:"6B4026",chapeu:"bone",corChapeu:"3A3440",oculos:"escuros",top:"camiseta",corTop:"D9852B",baixo:"calca",corBaixo:"2F3352",tenis:"tenis",corTenis:"5A3A2A",local:"praca",faz:"parado",acao:"nenhuma",fala:"",notas:"",ordem:Date.now()}}
+function defaults(){return{nome:"novo.vbz",tipo:"npc",papel:"",corpo:"m",altura:"baixinho",largura:"normal",bracos:"normal",pernas:"normal",tronco:"reto",pele:"media",cabelo:"curto",corCabelo:"6B4026",chapeu:"bone",corChapeu:"3A3440",oculos:"escuros",top:"camiseta",corTop:"D9852B",baixo:"calca",corBaixo:"2F3352",tenis:"tenis",corTenis:"5A3A2A",local:"praca",faz:"parado",acao:"nenhuma",fala:"",notas:"",ordem:Date.now()}}
 function clean(r){const d=defaults(),o={...d,...(r&&typeof r==="object"?r:{})};
  o.nome=String(o.nome||"").slice(0,24);o.tipo=o.tipo==="avatar"?"avatar":"npc";o.corpo=o.corpo==="f"?"f":"m";
- o.pele=byId(SKIN,o.pele,"media").id;o.altura=byId(HEIGHTS,o.altura,"baixinho").id;o.largura=byId(WIDTHS,o.largura,"normal").id;o.bracos=byId(ARMS,o.bracos,"normal").id;o.cabelo=byId(HAIR,o.cabelo,"curto").id;o.chapeu=byId(HAT,o.chapeu,"nenhum").id;o.oculos=byId(GLASSES,o.oculos,"nenhum").id;
+ o.pele=byId(SKIN,o.pele,"media").id;o.altura=byId(HEIGHTS,o.altura,"baixinho").id;o.largura=byId(WIDTHS,o.largura,"normal").id;o.bracos=byId(ARMS,o.bracos,"normal").id;o.pernas=byId(LEGS,o.pernas,"normal").id;o.tronco=byId(TORSOS,o.tronco,"reto").id;o.cabelo=byId(HAIR,o.cabelo,"curto").id;o.chapeu=byId(HAT,o.chapeu,"nenhum").id;o.oculos=byId(GLASSES,o.oculos,"nenhum").id;
  o.top=byId(TOPS,o.top,"camiseta").id;o.baixo=byId(BOTTOMS,o.baixo,"calca").id;o.tenis=byId(SHOES,o.tenis,"tenis").id;
  for(const k of["corCabelo","corChapeu","corTop","corBaixo","corTenis"])o[k]=HEXOK(o[k])?String(o[k]).toUpperCase():d[k];
  o.local=byId(PLACES,o.local,"praca").id;o.faz=byId(DOES,o.faz,"parado").id;o.acao=byId(ACTIONS,o.acao,"nenhuma").id;
@@ -304,7 +306,22 @@ function squash(s,rows){if(!rows.length)return s;const col=new Array(SW*SH).fill
  return{col,part}}
 /* width: the body below the neck gets two pixels wider */
 function widen(s){const col=s.col.slice(),part=s.part.slice();for(let y=20;y<SH;y++)for(let x=0;x<SW;x++){const sx=x<12?x+1:x>13?x-1:x;col[y*SW+x]=s.col[y*SW+sx];part[y*SW+x]=s.part[y*SW+sx]}return{col,part}}
-function shaped(c){let s=armShape(sprite(c),c.bracos==="normal"?null:c.bracos);if(c.largura==="largo")s=widen(s);return squash(s,CUTS[c.altura]||CUTS.baixinho)}
+/* leg shapes: "finas" (thin, shoes stay chunky), "afuniladas" (thin below the knee), "afastadas" (a gap between the legs) */
+function legShape(s,mode){if(!mode)return s;const col=s.col.slice(),part=s.part.slice();
+ const L=["legL","botL","footL","shoeL"],R=["legR","botR","footR","shoeR"];
+ for(let y=41;y<SH;y++)for(const [set,dir] of[[L,-1],[R,1]]){const xs=[];for(let x=0;x<SW;x++){const p=part[y*SW+x];if(p&&set.includes(p[1]))xs.push(x)}
+  if(xs.length<3)continue;const outer=dir<0?xs[0]:xs[xs.length-1],inner=dir<0?xs[xs.length-1]:xs[0],shoe=part[y*SW+outer][0]==="shoe";
+  const clear=x=>{col[y*SW+x]=null;part[y*SW+x]=null};
+  if(mode==="finas"&&!shoe)clear(outer);
+  if(mode==="afuniladas"&&!shoe&&y>=45)clear(outer);
+  if(mode==="afastadas"&&y>=43){clear(inner);const o=dir<0?xs.slice(0,-1):xs.slice(1).reverse();for(const x of o){col[y*SW+x+dir]=col[y*SW+x];part[y*SW+x+dir]=part[y*SW+x]}clear(dir<0?xs[xs.length-2]:xs[1])}}
+ return{col,part}}
+/* torso shape: "cintura" pulls the sides in at the waist */
+function torsoShape(s,mode){if(mode!=="cintura")return s;const col=s.col.slice(),part=s.part.slice(),T=["torso","torsoT","top","inner"];
+ for(let y=28;y<=34;y++){const xs=[];for(let x=0;x<SW;x++){const p=part[y*SW+x];if(p&&T.includes(p[1]))xs.push(x)}
+  if(xs.length<6)continue;for(const x of[xs[0],xs[xs.length-1]]){col[y*SW+x]=null;part[y*SW+x]=null}}
+ return{col,part}}
+function shaped(c){let s=armShape(sprite(c),c.bracos==="normal"?null:c.bracos);s=legShape(s,c.pernas==="normal"?null:c.pernas);s=torsoShape(s,c.tronco);if(c.largura==="largo")s=widen(s);return squash(s,CUTS[c.altura]||CUTS.baixinho)}
 function pixels(c,level){const s=shaped(c);if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
  let px=finish(s.col,s.part,SW,SH),W=SW,H=SH;for(let i=2;i<level;i++){px=scale2x(px,W,H);W*=2;H*=2}return{px,W,H}}
 function spriteCanvas(c,crop,level){
@@ -378,7 +395,9 @@ function renderForm(){
   two(field("Tipo",chips([{id:"npc",n:"NPC"},{id:"avatar",n:"Avatar jogável"}],c.tipo,v=>set("tipo",v))),field("Corpo",chips([{id:"m",n:"Masculino"},{id:"f",n:"Feminino"}],c.corpo,v=>set("corpo",v)))),
   field("Pele",swatches(SKIN,c.pele,v=>set("pele",v))),
   two(field("Altura",chips(HEIGHTS,c.altura,v=>set("altura",v))),field("Largura",chips(WIDTHS,c.largura,v=>set("largura",v)))),
-  field("Braços",chips(ARMS,c.bracos,v=>set("bracos",v)))];
+  field("Braços",chips(ARMS,c.bracos,v=>set("bracos",v))),
+  field("Pernas",chips(LEGS,c.pernas,v=>set("pernas",v))),
+  field("Tronco",chips(TORSOS,c.tronco,v=>set("tronco",v)))];
  f.append(sec("Personagem",...ident));
  f.append(sec("Cabeça",
   field("Cabelo",chips(HAIR,c.cabelo,v=>set("cabelo",v)),swatches(HAIRC,c.corCabelo,v=>set("corCabelo",v))),
