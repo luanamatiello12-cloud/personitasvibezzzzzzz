@@ -57,9 +57,6 @@ button{font:inherit;cursor:pointer;color:inherit}
 .floor canvas{position:relative;z-index:1;height:var(--zh,198px);max-width:100%;width:auto;image-rendering:pixelated;image-rendering:crisp-edges}
 .pxctl{padding:12px 14px 4px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--line)}
 .pxctl label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.animrow{display:flex;gap:6px;flex-wrap:wrap}.animrow .btn{padding:6px 10px;font-size:13px;cursor:pointer}.animrow .btn.on{background:var(--pink);color:#fff;border-color:var(--pink)}
-.sheetbox{margin:0 0 10px;padding:8px;border:1px solid var(--line);border-radius:10px;background:#5b3a8c}.sheetbox img{display:block;width:100%;image-rendering:pixelated}.sheetbox .hint{color:#fff;margin-top:6px}
-.btn.turn{margin:6px 0 8px;font-size:13px;cursor:pointer}
 .pxrow{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
 .pxrow input{flex:1;accent-color:var(--pink);min-width:0}
 .plate{padding:12px 14px;display:flex;flex-direction:column;gap:4px}
@@ -132,11 +129,6 @@ textarea{resize:vertical;min-height:58px}
         <label for="zmRange">Tamanho na tela</label>
         <div class="pxrow"><span>menor</span><input type="range" id="zmRange" min="1" max="6" step="1" value="3"><span>maior</span></div>
         <div class="hint" id="zmName">3×</div>
-        <button class="btn turn" id="btnTurn" type="button" aria-pressed="false">↻ Virar · vendo de frente</button>
-        <label>Animação</label>
-        <div class="animrow" id="animRow"></div>
-        <button class="btn turn" id="btnSheet" type="button">⬇ Baixar animação pro jogo (PNG)</button>
-        <div class="sheetbox" id="sheetBox" hidden></div>
       </div>
       <div class="plate">
         <div class="h"><span class="handle" id="pHandle">—</span><span class="tag" id="pTag">NPC</span></div>
@@ -152,21 +144,21 @@ textarea{resize:vertical;min-height:58px}
 <script>
 /* ---------- options ---------- */
 const SKIN=[{id:"clara",n:"Clara",c:"F2C9A0"},{id:"media",n:"Média",c:"D69A63"},{id:"morena",n:"Morena",c:"B07446"},{id:"escura",n:"Escura",c:"74462B"}];
-const HAIR=[{id:"curto",n:"Curto"},{id:"baguncado",n:"Bagunçado"},{id:"espetado",n:"Espetado"},{id:"pixie",n:"Pixie"},{id:"chanel",n:"Chanel"},{id:"comprido",n:"Comprido"},{id:"liso",n:"Liso comprido"},{id:"cacheado",n:"Cacheado"},{id:"cachoscurtos",n:"Cachos curtos"},{id:"blackpower",n:"Black power"},{id:"dreads",n:"Dreads"},{id:"coque",n:"Coque"},{id:"raspado",n:"Raspado"},{id:"careca",n:"Careca"}];
-const HAT=[{id:"nenhum",n:"Nenhum"},{id:"bandana",n:"Bandana"},{id:"capuz",n:"Capuz"}];
+const HAIR=[{id:"curto",n:"Curto"},{id:"comprido",n:"Comprido"},{id:"cacheado",n:"Cacheado"},{id:"blackpower",n:"Black power"},{id:"coque",n:"Coque"},{id:"raspado",n:"Raspado"},{id:"careca",n:"Careca"}];
+const HAT=[{id:"nenhum",n:"Nenhum"},{id:"bone",n:"Boné"},{id:"gorro",n:"Gorro"}];
 const GLASSES=[{id:"nenhum",n:"Nenhum"},{id:"escuros",n:"Óculos escuros"},{id:"grau",n:"Óculos de grau"}];
-const TOPS=[{id:"camiseta",n:"Camiseta"},{id:"regata",n:"Regata"},{id:"moletom",n:"Manga longa"},{id:"jaqueta",n:"Jaqueta"}];
+const TOPS=[{id:"camiseta",n:"Camiseta"},{id:"regata",n:"Regata"},{id:"babytee",n:"Baby tee"},{id:"moletom",n:"Moletom"},{id:"jaqueta",n:"Jaqueta"}];
 const BOTTOMS=[{id:"calca",n:"Calça"},{id:"shorts",n:"Shorts"},{id:"saia",n:"Saia"}];
 const SHOES=[{id:"tenis",n:"Tênis"},{id:"bota",n:"Bota"}];
 const HAIRC=[{id:"2A1E1A",n:"Preto"},{id:"6B4026",n:"Castanho"},{id:"9A5B2E",n:"Castanho claro"},{id:"D9B060",n:"Loiro"},{id:"B5562B",n:"Ruivo"},{id:"9A98A0",n:"Grisalho"},{id:"E070B0",n:"Rosa"},{id:"7A3FB0",n:"Roxo"},{id:"3C5BB0",n:"Azul"},{id:"E8E2D8",n:"Platinado"}];
-const CLOTH=[{id:"3A3440",n:"Grafite"},{id:"D9852B",n:"Laranja"},{id:"2F3352",n:"Marinho"},{id:"2A2630",n:"Preto"},{id:"EDE8E0",n:"Branco"},{id:"7D7A86",n:"Cinza"},{id:"B8323A",n:"Vermelho"},{id:"FF2EC4",n:"Vibe Pink"},{id:"7A00FF",n:"Vibe Purple"},{id:"3D6FB8",n:"Azul"},{id:"3E7A4A",n:"Verde"},{id:"E8C140",n:"Amarelo"},{id:"C9B08A",n:"Bege"},{id:"5A3A2A",n:"Marrom"},{id:"A3287B",n:"Magenta"}];
+const CLOTH=[{id:"D9852B",n:"Laranja"},{id:"2F3352",n:"Marinho"},{id:"2A2630",n:"Preto"},{id:"EDE8E0",n:"Branco"},{id:"7D7A86",n:"Cinza"},{id:"B8323A",n:"Vermelho"},{id:"FF2EC4",n:"Vibe Pink"},{id:"7A00FF",n:"Vibe Purple"},{id:"3D6FB8",n:"Azul"},{id:"3E7A4A",n:"Verde"},{id:"E8C140",n:"Amarelo"},{id:"C9B08A",n:"Bege"},{id:"5A3A2A",n:"Marrom"},{id:"A3287B",n:"Magenta"}];
 const PLACES=[{id:"atual",n:"Onde está hoje"},{id:"entrada",n:"Entrada"},{id:"praca",n:"Praça central"},{id:"pista",n:"Pista de dança"},{id:"palco",n:"Palco · DJ"},{id:"lounge",n:"Lounge"},{id:"shop",n:"VBZ Shop"},{id:"eventos",n:"Painel de eventos"},{id:"photo",n:"Photo spot"},{id:"mirante",n:"Mirante"}];
 const DOES=[{id:"parado",n:"Parado"},{id:"conversando",n:"Conversando"},{id:"dancando",n:"Dançando"},{id:"sentado",n:"Sentado"},{id:"dj",n:"Tocando (DJ)"},{id:"andando",n:"Andando"}];
 const ACTIONS=[{id:"nenhuma",n:"Só cumprimenta"},{id:"loja",n:"Abre a loja"},{id:"foto",n:"Tira foto"},{id:"jukebox",n:"Abre a jukebox"},{id:"evento",n:"Mostra eventos"}];
 
 const byId=(list,id,fb)=>list.find(x=>x.id===id)||list.find(x=>x.id===fb)||list[0];
 const HEXOK=s=>/^[0-9A-F]{6}$/i.test(s||"");
-function defaults(){return{nome:"novo.vbz",tipo:"npc",papel:"",corpo:"m",pele:"media",cabelo:"curto",corCabelo:"6B4026",chapeu:"nenhum",corChapeu:"3A3440",oculos:"escuros",top:"camiseta",corTop:"D9852B",baixo:"calca",corBaixo:"2F3352",tenis:"tenis",corTenis:"5A3A2A",local:"praca",faz:"parado",acao:"nenhuma",fala:"",notas:"",ordem:Date.now()}}
+function defaults(){return{nome:"novo.vbz",tipo:"npc",papel:"",corpo:"m",pele:"media",cabelo:"curto",corCabelo:"6B4026",chapeu:"bone",corChapeu:"3A3440",oculos:"escuros",top:"camiseta",corTop:"D9852B",baixo:"calca",corBaixo:"2F3352",tenis:"tenis",corTenis:"5A3A2A",local:"praca",faz:"parado",acao:"nenhuma",fala:"",notas:"",ordem:Date.now()}}
 function clean(r){const d=defaults(),o={...d,...(r&&typeof r==="object"?r:{})};
  o.nome=String(o.nome||"").slice(0,24);o.tipo=o.tipo==="avatar"?"avatar":"npc";o.corpo=o.corpo==="f"?"f":"m";
  o.pele=byId(SKIN,o.pele,"media").id;o.cabelo=byId(HAIR,o.cabelo,"curto").id;o.chapeu=byId(HAT,o.chapeu,"nenhum").id;o.oculos=byId(GLASSES,o.oculos,"nenhum").id;
@@ -176,78 +168,128 @@ function clean(r){const d=defaults(),o={...d,...(r&&typeof r==="object"?r:{})};
  o.papel=String(o.papel||"").slice(0,40);o.fala=String(o.fala||"").slice(0,160);o.notas=String(o.notas||"").slice(0,400);
  o.pos=o.pos&&isFinite(o.pos.x)&&isFinite(o.pos.z)?{x:+o.pos.x,z:+o.pos.z}:null;o.ordem=+o.ordem||0;return o}
 
-/* ---------- pixel sprite: the reference photo itself, cut out and split into parts that can be recoloured ---------- */
-const SW=32, SH=80;
+/* ---------- pixel sprite: 26 x 66 grid, drawn pixel by pixel, then shaded and outlined ---------- */
+const SW=26, SH=66, OUT=[27,17,32];
 const rgb=h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
 const mul=(c,k)=>c.map(v=>Math.max(0,Math.min(255,Math.round(k<1?v*k:v+(255-v)*(k-1)))));
-/* part of each pixel: C cap, G glasses, H hair, S skin, T top, B bottom, F shoes, L line */
-const PARTS=["................................", "................................", "................................", ".........CCCCCCCCCCC............", ".........CCCCCCCCCCCC...........", ".........CCCCCCCCCCCCCC.........", "........CCCCCCCCCCCCCCCC........", "......CCCCCCCCCCCCCCCCCC........", ".....CCCCCCCCCCCCCCCCCCC........", "....CCCCCCCCCCCCCCCCCCCC........", "....CCCCCCCCCCCCCCCCCCCC........", ".....CCCCCCCCCCCCCCCCCCC........", "......GGGSSSGGGGGGGGHHHH........", "......GGGGGGGGGGGGGGHHHH........", "......GGGGGGGGGGSGGGSHHH........", "......GGGSSGGGGSSHGGSHHH........", "......GSSSSSGGSSSSSSSHHH........", "......GSSSSSSSSSSSSSSH..........", "......GSSSSSSSSSSSSHHH..........", "......LSSSSSSSSSSSSH............", "......LLSSSSSSSSSSSH............", "........LSSSSSSSSSSHH...........", "........LLSSSSLSSSSHHH..........", "........LLLLLLSSSSSHSSHH........", ".......LTTTLLTSSSSTTTTTTT.......", ".......TTTTTLTSSSTTTTTTTTT......", "......TTTTTTTTTTTTTTTTTTTTL.....", "......TTTTTTTTTTTTTTTTTTTTT.....", ".....LTTTTTTTTTTTTTTTTTTTTT.....", ".....LTTTTTTTTTTTTTTTTTTTTTL....", ".....LTTTTTTTTTTTTTTTTTTTTTT....", ".....TTTTTTTTTTTTTTTTTTTTTTT....", ".....TTTTTTTTTTTTTTTTTTTTTTT....", ".....TTTTTTTTTTTTTTTTTTTTTTTT...", ".....TTTTTTTTTTTTTTTTTLTTTTTT...", ".....TTTLTTTTTTTTTTTTTLSSTTS....", "....SSSSLTTTTTTTTTTTTTLLTTSS....", "....SSSSLTTTTTTTTTTTTTLLSSSS....", "...SSSSSLTTTTTTTTTTTTTLSSSSS....", "...SSSSSLTTTTTTTTTTTTTSSSSSSS...", "...SSSSSTTTTTTTTTTTTTTTLSSSSS...", "...SSSSSTTTTTTTTTTTTTTSLSSSSS...", "...SSSSSTTTTTTTTTTTTTTTLSSSSS...", "...SSSSSTTTTTTTTTTTTTTTSSSSSS...", "...SSSSSTTTTTTTTTTTTTTTSSSSSS...", "...SSSSSSTTTTTTTTTTTTTTSSSSSS...", "....LSLSTTTTTTTTTTTTTTSLSSSS....", "....LSSSSTTTTTTTTTTTTTTLSSSS....", "....SSSSLTTTTTTTTTTTTTSSSSSL....", "....SSSLBBBBBBTTTTTTTBSSSSSS....", "....SSSLBBBBBBBBBBBBBBSSSSSS....", ".....SSLBBBBBBBBBBBBBBSSSSSS....", ".......LBBBBBBBBBBBBBBBBSSS.....", ".......BBBBBBBBBBBBBBBBBB.......", ".......BBBBBBBBBBBBBBBBBB.......", ".......BBBBBBBBBBBBBBBBBB.......", ".......BBBBBBBBBBBBBBBBBB.......", ".......BBBBBBBBBBBBBBBBB........", ".......BBBBBBBBBBBBBBBBBB.......", ".......BBBBBBBBBBBBBBBBBB.......", ".......BBBBBBBBBBBBBBBBBB.......", ".......BBBBBBBBBBBBBBBBBB.......", "........BBBBBBB..BBBBBBBB.......", "........BBBBBBB..BBBBBBBB.......", "........BBBBBBB..BBBBBBBBB......", "........BBBBBBB..BBBBBBBBB......", "........BBBBBBB..BBBBBBBBB......", ".......BBBBBBBB..BBBBBBBB.......", ".......FFFFFBFFB.BBBBBBBB.......", ".......FFFFFBFFB.BBFFFFBBB......", "......FFFFFFFFFB..FFFFFFBB......", "......FFFFFFFFFB..FFFFFFFB......", "..FFFFFFFFFFFFFFFFFFFFFFFF......", "..FFFFFFFFFFFFFFFFFFFFFFFFF.....", "..FFFFFFFFFFFFFFFFFFFFFFFFF.....", "..FFFFFFFFFFFFFFFFFFFFFFFFF.....", "....FFFFFFF...FFFFFFFFFFFFF.....", "...............FFFFFFFF.........", "................................", "................................"];
-const PHOTO_SRC="data:image/png;base64,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";
-/* the colours the photo already has: choosing them keeps the photo untouched */
-const PHOTO_DEF={C:"3A3440",H:"6B4026",S:"D69A63",T:"D9852B",B:"2F3352",F:"5A3A2A"};
-let PH=null;
-(function(){const im=new Image();im.onload=()=>{const cv=document.createElement("canvas");cv.width=SW;cv.height=SH;const x=cv.getContext("2d");x.drawImage(im,0,0);PH=x.getImageData(0,0,SW,SH).data;try{renderCast();renderPreview()}catch(e){}};im.src=PHOTO_SRC})();
-/* woman: long hair, bust and waist painted over the photo with the photo's own tones */
-const FEM=(()=>{const m={},HD=[30,10,5],HM=[70,29,6],HL=[100,44,10],TD=[99,40,1],TL=[184,74,2];
- const set=(x,y,p,v,e)=>{m[y*SW+x]=[p,v,e]};
- const lock=(x0,x1,y0,y1,e)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)set(x,y,"H",x===x1?HD:(x===x0+1&&y<y0+(y1-y0)*.6?HL:HM),e)};
- lock(24,27,11,24,true);lock(25,27,25,31,true);
- lock(18,23,17,30);lock(19,23,31,35);lock(20,22,36,38);set(21,39,"H",HD);set(18,30,"H",HD);set(19,35,"H",HD);set(20,38,"H",HD);set(22,38,"H",HD);
- lock(3,5,11,27);lock(4,5,28,31);set(4,32,"H",HD);set(3,27,"H",HD);
- for(const x of[9,10,11,12,14,15,16,17,18])set(x,35,"T",TD);set(13,34,"T",TD);
- for(const x of[10,11,16,17])set(x,32,"T",TL);
- for(let y=38;y<=44;y++){set(9,y,"T",TD);set(18,y,"T",TD)}
- return m})();
-const lumOf=c=>c[0]*.3+c[1]*.59+c[2]*.11;
-function partColors(c){return{C:c.corChapeu,H:c.corCabelo,S:byId(SKIN,c.pele).c,T:c.corTop,B:c.corBaixo,F:c.corTenis}}
+function sprite(c){
+ const col=new Array(SW*SH).fill(null), part=new Array(SW*SH).fill(null);
+ // part = [garment, piece]: seams appear between pieces side by side, and between garments top/bottom
+ const put=(x,y,cl,g,p)=>{x+=1;y+=1;if(x<0||y<0||x>=SW||y>=SH)return;const i=y*SW+x;col[i]=cl;part[i]=[g,p||g]};
+ const rect=(x0,y0,x1,y1,cl,g,p)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)put(x,y,cl,g,p)};
+ const row=(y,x0,x1,cl,g,p)=>rect(x0,y,x1,y,cl,g,p);
+ const fem=c.corpo==="f";
+ const sk=rgb(byId(SKIN,c.pele).c), skD=mul(sk,.82), hc=rgb(c.corCabelo), hcD=mul(hc,.75), tc=rgb(c.corTop), tcD=mul(tc,.78), bc=rgb(c.corBaixo), bcD=mul(bc,.8), sc=rgb(c.corTenis), hat=rgb(c.corChapeu), hatD=mul(hat,.72);
+ const T=fem?[7,16]:[6,17], AL=fem?[4,6]:[3,5], AR=fem?[17,19]:[18,20];
+ const LL=[T[0]+1,11], LR=[12,T[1]-1];
+ // hair behind the head
+ if(c.cabelo==="comprido"){rect(6,6,17,fem?27:22,hc,"hairB")}
+ if(c.cabelo==="blackpower"){for(let y=0;y<=12;y++){const hw=Math.round(Math.sqrt(Math.max(0,49-(y-6)*(y-6)))*1.15);row(y,Math.max(3,12-hw),Math.min(20,11+hw),hc,"hairB")}}
+ // legs and feet
+ rect(LL[0],39,LL[1],57,sk,"leg","legL");rect(LR[0],39,LR[1],57,sk,"leg","legR");
+ rect(LL[0]-1,57,LL[1],60,sk,"foot","footL");rect(LR[0],57,LR[1]+1,60,sk,"foot","footR");
+ // torso, arms, hands
+ rect(T[0],19,T[1],38,sk,"body","torso");row(19,T[0],T[0],null,null);
+ if(fem){rect(T[0],29,T[0],32,null,null);rect(T[1],29,T[1],32,null,null)}
+ rect(AL[0],20,AL[1],34,sk,"arm","armL");row(19,AL[0]+1,AL[1],sk,"arm","armL");
+ rect(AR[0],20,AR[1],34,sk,"arm","armR");row(19,AR[0],AR[1]-1,sk,"arm","armR");
+ rect(AL[0],35,AL[1],37,sk,"hand","handL");row(38,AL[0]+1,AL[1],sk,"hand","handL");
+ rect(AR[0],35,AR[1],37,sk,"hand","handR");row(38,AR[0],AR[1]-1,sk,"hand","handR");
+ // neck and head
+ rect(10,16,13,18,skD,"neck");
+ row(3,9,14,sk,"head");row(4,8,15,sk,"head");rect(7,5,16,14,sk,"head");row(15,8,15,sk,"head");row(16,9,14,sk,"head");
+ rect(6,9,6,11,sk,"ear","earL");rect(17,9,17,11,sk,"ear","earR");put(6,10,skD,"ear","earL");put(17,10,skD,"ear","earR");
+ // face
+ const ink=[30,22,30];
+ put(9,10,ink,"head");put(9,11,ink,"head");put(14,10,ink,"head");put(14,11,ink,"head");
+ put(10,10,[245,240,235],"head");put(13,10,[245,240,235],"head");
+ row(8,8,10,hcD,"head");row(8,13,15,hcD,"head");
+ put(12,12,skD,"head");put(11,14,mul(sk,.6),"head");put(12,14,mul(sk,.6),"head");
+ if(fem){put(8,13,mul(sk,1.12),"head");put(15,13,mul(sk,1.12),"head")}
+ // bottoms
+ if(c.baixo==="saia"){rect(T[0],35,T[1],38,bc,"bottom");rect(T[0]-1,39,T[1]+1,43,bc,"bottom");rect(T[0]-2,44,T[1]+2,46,bc,"bottom");for(let x=T[0];x<=T[1];x+=3)rect(x,40,x,46,bcD,"bottom")}
+ else{const end=c.baixo==="shorts"?45:56;rect(T[0],35,11,38,bc,"bottom","botL");rect(12,35,T[1],38,bc,"bottom","botL");rect(LL[0],39,LL[1],end,bc,"bottom","botL");rect(LR[0],39,LR[1],end,bc,"bottom","botR");
+  if(c.baixo==="shorts"){row(end,LL[0],LL[1],bcD,"bottom","botL");row(end,LR[0],LR[1],bcD,"bottom","botR")}
+  else{put(LL[0]+1,46,bcD,"bottom","botL");put(LR[1]-1,50,bcD,"bottom","botR")}}
+ // shoes
+ const sole=[232,226,216];
+ if(c.tenis==="bota"){rect(LL[0],51,LL[1],60,sc,"shoe","shoeL");rect(LR[0],51,LR[1],60,sc,"shoe","shoeR");rect(LL[0]-1,58,LL[1],60,sc,"shoe","shoeL");rect(LR[0],58,LR[1]+1,60,sc,"shoe","shoeR");row(61,LL[0]-1,LL[1],mul(sc,.55),"shoe","shoeL");row(61,LR[0],LR[1]+1,mul(sc,.55),"shoe","shoeR");row(53,LL[0],LL[1],mul(sc,.8),"shoe","shoeL");row(53,LR[0],LR[1],mul(sc,.8),"shoe","shoeR")}
+ else{rect(LL[0],56,LL[1],60,sc,"shoe","shoeL");rect(LR[0],56,LR[1],60,sc,"shoe","shoeR");rect(LL[0]-1,58,LL[1],60,sc,"shoe","shoeL");rect(LR[0],58,LR[1]+1,60,sc,"shoe","shoeR");row(61,LL[0]-1,LL[1],sole,"shoe","shoeL");row(61,LR[0],LR[1]+1,sole,"shoe","shoeR");put(LL[0]+1,57,mul(sc,1.3),"shoe","shoeL");put(LR[0]+1,57,mul(sc,1.3),"shoe","shoeR")}
+ // tops
+ const longSl=c.top==="moletom"||c.top==="jaqueta";
+ if(c.top==="regata"){rect(T[0]+1,22,T[1]-1,36,tc,"top");rect(T[0]+1,19,T[0]+2,21,tc,"top");rect(T[1]-2,19,T[1]-1,21,tc,"top")}
+ else{
+  const bot=c.top==="babytee"?30:(longSl?37:36);
+  rect(T[0],19,T[1],bot,tc,"top","torsoT");put(T[0],19,null,null);
+  const sl=longSl?34:(c.top==="babytee"?23:25);
+  rect(AL[0],20,AL[1],sl,tc,"top","slvL");row(19,AL[0]+1,AL[1],tc,"top","slvL");
+  rect(AR[0],20,AR[1],sl,tc,"top","slvR");row(19,AR[0],AR[1]-1,tc,"top","slvR");
+  if(longSl){row(34,AL[0],AL[1],tcD,"top","slvL");row(34,AR[0],AR[1],tcD,"top","slvR");row(bot,T[0],T[1],tcD,"top","torsoT")}
+  else{row(sl,AL[0],AL[1],tcD,"top","slvL");row(sl,AR[0],AR[1],tcD,"top","slvR")}
+  // collar
+  row(19,10,13,skD,"neck");put(11,20,skD,"neck");put(12,20,skD,"neck");
+  if(c.top==="camiseta"||c.top==="babytee")put(13,24,mul(tc,.6),"top","torsoT");
+  if(c.top==="moletom"){row(18,9,14,tcD,"top","hood");put(9,19,tcD,"top","hood");put(14,19,tcD,"top","hood");rect(9,30,14,33,tcD,"top","torsoT");put(11,21,[240,236,230],"top","torsoT");put(12,22,[240,236,230],"top","torsoT")}
+  if(c.top==="jaqueta"){rect(11,20,12,bot,[237,232,224],"inner");put(10,20,tcD,"top","torsoT");put(13,20,tcD,"top","torsoT");put(8,31,tcD,"top","torsoT");put(15,31,tcD,"top","torsoT")}
+ }
+ // front hair
+ const h=c.cabelo;
+ if(h==="curto"||h==="comprido"||h==="coque"){
+  row(2,9,14,hc,"hair");row(3,8,15,hc,"hair");rect(7,4,16,6,hc,"hair");
+  if(h!=="coque"){row(7,7,9,hc,"hair");row(7,13,16,hc,"hair");put(11,7,hc,"hair");put(6,6,hc,"hair");put(17,7,hc,"hair")} else {put(7,7,hc,"hair");put(16,7,hc,"hair")}
+  rect(7,8,7,10,hc,"hair");rect(16,8,16,10,hc,"hair");
+  row(4,10,12,mul(hc,1.25),"hair");
+ }
+ if(h==="comprido"){rect(6,8,7,fem?24:19,hc,"hair","hairFL");rect(16,8,17,fem?24:19,hc,"hair","hairFR")}
+ if(h==="coque"){rect(10,-1,13,1,hc,"hair","bun");put(10,-1,null,null);put(13,-1,null,null)}
+ if(h==="cacheado"){for(const x of[8,10,12,14])put(x,1,hc,"hair");row(2,7,16,hc,"hair");rect(6,3,17,7,hc,"hair");row(8,6,8,hc,"hair");row(8,15,17,hc,"hair");rect(6,9,6,11,hc,"hair");rect(17,9,17,11,hc,"hair");for(const [x,y] of[[8,3],[11,4],[14,3],[9,6],[13,6],[16,5],[7,5]])put(x,y,hcD,"hair")}
+ if(h==="blackpower"){rect(7,1,16,6,hc,"hair");row(7,7,9,hc,"hair");row(7,14,16,hc,"hair");for(const [x,y] of[[9,2],[13,3],[10,5],[15,5],[8,4]])put(x,y,hcD,"hair")}
+ if(h==="raspado"){row(3,9,14,hcD,"hair");rect(8,4,15,5,hcD,"hair");put(7,6,hcD,"hair");put(16,6,hcD,"hair")}
+ // hats
+ if(c.chapeu==="bone"){row(0,9,14,hat,"hat");row(1,8,15,hat,"hat");rect(7,2,16,6,hat,"hat");row(6,7,16,hatD,"hat");rect(3,6,8,7,hatD,"brim");put(3,6,null,null);row(7,3,8,mul(hat,.55),"brim");put(12,3,[255,46,196],"hat");put(13,3,[255,46,196],"hat");row(2,9,11,mul(hat,1.2),"hat")}
+ if(c.chapeu==="gorro"){row(-1,10,13,hat,"hat");row(0,8,15,hat,"hat");rect(7,1,16,5,hat,"hat");rect(6,5,17,7,hatD,"hat","cuff");for(let x=7;x<=16;x+=2)rect(x,5,x,7,mul(hat,.6),"hat","cuff");row(1,9,11,mul(hat,1.2),"hat")}
+ // glasses
+ if(c.oculos==="escuros"){const g=[26,24,30];rect(8,9,11,11,g,"glass","glL");rect(13,9,16,11,g,"glass","glR");put(12,9,g,"glass","glB");put(7,9,g,"glass","glL");put(9,9,[110,118,140],"glass","glL");put(14,9,[110,118,140],"glass","glR")}
+ if(c.oculos==="grau"){const g=[40,34,44];row(9,8,11,g,"glass","glL");row(12,8,11,g,"glass","glL");rect(8,10,8,11,g,"glass","glL");rect(11,10,11,11,g,"glass","glL");row(9,13,16,g,"glass","glR");row(12,13,16,g,"glass","glR");rect(13,10,13,11,g,"glass","glR");rect(16,10,16,11,g,"glass","glR");put(12,10,g,"glass","glB");put(7,10,g,"glass","glL")}
+ return {col,part};
+}
+/* shading + seams + outline on any grid size */
+function finish(col,part,SW,SH){
+ const out=col.map(v=>v&&v.slice());
+ const at=(x,y)=>x>=0&&y>=0&&x<SW&&y<SH?y*SW+x:-1;
+ for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){const i=y*SW+x;if(!col[i])continue;const p=part[i];
+  const r=at(x+1,y),d=at(x,y+1),l=at(x-1,y),u=at(x,y-1);
+  const flat=p[0]==="glass";
+  if(!flat&&r>=0&&col[r]&&part[r][1]!==p[1]){out[i]=mul(col[i],.5);continue}
+  if(!flat&&d>=0&&col[d]&&part[d][0]!==p[0]){out[i]=mul(col[i],.55);continue}
+  if(flat)continue;
+  if(r<0||!col[r]||d<0||!col[d])out[i]=mul(col[i],.8);
+  else if(l<0||!col[l]||u<0||!col[u])out[i]=mul(col[i],1.1);
+ }
+ // outline
+ for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){const i=y*SW+x;if(col[i])continue;
+  for(const [dx,dy] of[[1,0],[-1,0],[0,1],[0,-1]]){const j=at(x+dx,y+dy);if(j>=0&&col[j]){out[i]=OUT;break}}}
+ return out;
+}
+/* coarser: merge each 2x2 block into one pixel (most common piece wins) */
+function halve(col,part){const W=SW/2,H=SH/2,c2=new Array(W*H).fill(null),p2=new Array(W*H).fill(null);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const cells=[];for(const [dx,dy] of[[0,0],[1,0],[0,1],[1,1]]){const i=(y*2+dy)*SW+x*2+dx;if(col[i])cells.push(i)}
+  if(cells.length<2)continue;const cnt={};let best=cells[0],bn=0;for(const i of cells){const k=col[i].join();cnt[k]=(cnt[k]||0)+1;if(cnt[k]>bn){bn=cnt[k];best=i}}
+  c2[y*W+x]=col[best];p2[y*W+x]=part[best]}
+ return{col:c2,part:p2,W,H}}
 /* finer: Scale2x doubles the grid and rounds the stair steps while keeping hard pixels */
 function scale2x(px,W,H){const out=new Array(W*H*4).fill(null),k=v=>v?v.join():"n",g=(x,y)=>x<0||y<0||x>=W||y>=H?null:px[y*W+x];
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const P=g(x,y),A=g(x,y-1),B=g(x+1,y),C=g(x-1,y),D=g(x,y+1),a=k(A),b=k(B),c=k(C),d=k(D),o=(y*2)*W*2+x*2;
   out[o]=c===a&&c!==d&&a!==b?A:P;out[o+1]=a===b&&a!==c&&b!==d?B:P;out[o+W*2]=d===c&&d!==b&&c!==a?C:P;out[o+W*2+1]=b===d&&b!==a&&d!==c?D:P}
  return out}
-/* coarser: each 2x2 block becomes one pixel (most common colour wins) */
-function halvePx(px,W,H){const w=W/2,h=H/2,out=new Array(w*h).fill(null);
- for(let y=0;y<h;y++)for(let x=0;x<w;x++){const cnt={};let best=null,bn=0,n=0;for(const [dx,dy] of[[0,0],[1,0],[0,1],[1,1]]){const v=px[(y*2+dy)*W+x*2+dx];if(!v)continue;n++;const k=v.join();cnt[k]=(cnt[k]||0)+1;if(cnt[k]>bn){bn=cnt[k];best=v}}
-  if(n>=2)out[y*w+x]=best}
- return out}
 const PX_NAMES={1:"Bem pixelado",2:"Padrão",3:"Suave",4:"Bem suave"};
 let pxLevel=2;try{const v=+localStorage.getItem("vbz-atelie-pixel");if(PX_NAMES[v])pxLevel=v}catch(e){}
-/* the tinted figure on the base grid, facing left, no shadow */
-function baseGrid(c){const g=new Array(SW*SH).fill(null);if(!PH)return g;const pc=partColors(c),tint={},fem=c.corpo==="f";
- for(const k in pc)tint[k]=pc[k]!==PHOTO_DEF[k]?{t:rgb(pc[k]),l:lumOf(rgb(PHOTO_DEF[k]))}:null;
- for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){let p=PARTS[y][x],v=null;const f=fem&&FEM[y*SW+x];
-  if(f&&(!f[2]||p===".")){p=f[0];v=f[1]}else if(p!=="."){const o=(y*SW+x)*4;v=[PH[o],PH[o+1],PH[o+2]]}
-  if(!v)continue;const tt=tint[p];g[y*SW+x]=tt?mul(tt.t,Math.min(1.35,lumOf(v)/tt.l)):v}
- return g}
-/* cut-out animation: the figure is split into legs, body and arms, and each piece is nudged per frame */
-const ANIMS=[{id:"parado",n:"Parado",f:1},{id:"respirando",n:"Respirando",f:4},{id:"andando",n:"Andando",f:4}];
-const LEG_Y=53, LEG_SPLIT=16, ARM_Y=36;
-function pose(g,anim,i){if(!anim||anim==="parado")return g;
- const out=new Array(SW*SH).fill(null),putp=(x,y,v)=>{if(x>=0&&y>=0&&x<SW&&y<SH)out[y*SW+x]=v};
- let bob=0,leg=0;
- if(anim==="respirando")bob=(i%4===1||i%4===2)?1:0;
- if(anim==="andando"){const ph=i%4;bob=ph%2?0:1;leg=ph===0?3:ph===2?-3:0}
- const isArm=(x,y)=>(x<=7||x>=22)&&y>=ARM_Y&&y<=52&&"SL".includes(PARTS[y][x]);
- // legs: far one first, the near one on top; the foot going back lifts a little
- for(const left of[true,false])for(let y=LEG_Y;y<SH;y++)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(!v||(x<LEG_SPLIT)!==left||isArm(x,y))continue;
-  const t=Math.max(0,(y-58)/19),a=left?-leg:leg,dx=Math.round(a*t);putp(x+dx,y-(dx>0&&t>.7?1:0),v)}
- // head and torso bob together
- for(let y=LEG_Y-1;y>=0;y--)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(v&&!isArm(x,y))putp(x,y+bob,v)}
- // arms swing against the legs
- for(let y=ARM_Y;y<=52;y++)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(!v||!isArm(x,y))continue;
-  const t=(y-ARM_Y)/16,a=(x<LEG_SPLIT?leg:-leg)*.7;putp(x+Math.round(a*t),y+bob,v)}
- return out}
-function pixels(c,level,view,fr){let px=new Array(SW*SH).fill(null),W=SW,H=SH;
- if(PH){const g=pose(baseGrid(c),fr&&fr.a,fr?fr.i:0);
-  for(let y=SH-5;y<SH;y++)for(let x=0;x<SW;x++){const dx=(x-(SW-1)/2)/13,dy=(y-(SH-2.5))/2.2;if(dx*dx+dy*dy<=1)px[y*SW+x]=[0,0,0,70]}
-  for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(v)px[y*SW+(view?SW-1-x:x)]=v}}
- if(level<=1){px=halvePx(px,W,H);W/=2;H/=2}
- for(let i=2;i<level;i++){px=scale2x(px,W,H);W*=2;H*=2}
- return{px,W,H}}
-function spriteCanvas(c,crop,level,view,fr){
- const r=pixels(c,crop?2:(level||pxLevel),crop?0:view,crop?null:fr),px=r.px,W=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
+function pixels(c,level){const s=sprite(c);if(level<=1){const h=halve(s.col,s.part);return{px:finish(h.col,h.part,h.W,h.H),W:h.W,H:h.H}}
+ let px=finish(s.col,s.part,SW,SH),W=SW,H=SH;for(let i=2;i<level;i++){px=scale2x(px,W,H);W*=2;H*=2}return{px,W,H}}
+function spriteCanvas(c,crop,level){
+ const r=pixels(c,crop?2:(level||pxLevel)),px=r.px,SW=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
  const cv=document.createElement("canvas");cv.width=w;cv.height=h;const ctx=cv.getContext("2d");const img=ctx.createImageData(w,h);
- for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=px[(y+y0)*W+(x+x0)];if(!v)continue;const o=(y*w+x)*4;img.data[o]=v[0];img.data[o+1]=v[1];img.data[o+2]=v[2];img.data[o+3]=v[3]||255}
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=px[(y+y0)*SW+(x+x0)];if(!v)continue;const o=(y*w+x)*4;img.data[o]=v[0];img.data[o+1]=v[1];img.data[o+2]=v[2];img.data[o+3]=255}
  ctx.putImageData(img,0,0);cv.setAttribute("role","img");cv.setAttribute("aria-label","Sprite de "+(c.nome||"personagem"));return cv}
 
 /* ---------- state + persistence ---------- */
@@ -282,30 +324,17 @@ function renderCast(){
   const g=document.createElement("div");g.className="cgroup";
   for(const [id,c] of items){
    const b=document.createElement("button");b.type="button";b.className="card"+(id===cur?" on":"");b.setAttribute("aria-current",id===cur?"true":"false");
-   const th=document.createElement("span");th.className="thumb";th.append(spriteCanvas(c,[3,1,26,26]));b.append(th);
+   const th=document.createElement("span");th.className="thumb";th.append(spriteCanvas(c,[2,-1+1,22,22]));b.append(th);
    const d=document.createElement("div");const n=document.createElement("div");n.className="nm";n.textContent=c.nome||"sem nome";const r=document.createElement("div");r.className="rl";r.textContent=c.tipo==="npc"?(c.papel||"NPC")+" · "+byId(PLACES,c.local).n:"Avatar inicial";d.append(n,r);b.append(d);
    b.onclick=()=>select(id);g.append(b);
   }
   el.append(g);
  }
 }
-let view=0;const VIEWS=["como na foto","pro outro lado"];
-function showTurn(){const b=document.getElementById("btnTurn");b.textContent="↻ Virar · vendo "+VIEWS[view];b.setAttribute("aria-pressed",view>0)}
-let anim="parado",tick=0;
-function showAnim(){const r=document.getElementById("animRow");r.textContent="";for(const a of ANIMS){const b=document.createElement("button");b.type="button";b.className="btn"+(a.id===anim?" on":"");b.textContent=a.n;b.setAttribute("aria-pressed",a.id===anim);b.onclick=()=>{anim=a.id;tick=0;showAnim();renderPreview()};r.append(b)}}
-setInterval(()=>{if(anim==="parado")return;const c=chars[cur],pv=document.getElementById("preview");if(!c||!pv)return;tick++;pv.textContent="";pv.append(spriteCanvas(c,null,0,view,{a:anim,i:tick}))},190);
-/* sprite sheet for the game: one row per animation, 4 frames each, facing left */
-function sheetCanvas(c){const lv=Math.max(2,pxLevel),rowsA=ANIMS.filter(a=>a.id!=="parado");let fw=0,fh=0;const cells=rowsA.map(a=>[0,1,2,3].map(i=>{const cv=spriteCanvas(c,null,lv,0,{a:a.id,i});fw=cv.width;fh=cv.height;return cv}));
- const sh=document.createElement("canvas");sh.width=fw*4;sh.height=fh*rowsA.length;const x=sh.getContext("2d");cells.forEach((r,j)=>r.forEach((cv,i)=>x.drawImage(cv,i*fw,j*fh)));return{sh,fw,fh}}
-function downloadSheet(){const c=chars[cur];if(!c||!PH)return;const {sh,fw,fh}=sheetCanvas(c),name=(c.nome||"boneco").replace(/[^a-z0-9_.-]+/gi,"_")+"_"+fw+"x"+fh+".png";
- const box=document.getElementById("sheetBox");box.textContent="";const im=new Image();im.src=sh.toDataURL("image/png");im.alt="Folha de sprites de "+(c.nome||"personagem");
- const cap=document.createElement("div");cap.className="hint";cap.textContent="Cada quadro tem "+fw+" × "+fh+" px. Linha 1: respirando. Linha 2: andando. 4 quadros por linha, olhando para a esquerda (espelhe no jogo para o outro lado).";
- box.append(im,cap);box.hidden=false;
- try{const a=document.createElement("a");a.href=im.src;a.download=name;document.body.append(a);a.click();a.remove()}catch(e){}}
 function renderPreview(){
  const c=chars[cur];const pv=document.getElementById("preview");pv.textContent="";
  if(!c){["pHandle","pRole","pLine"].forEach(i=>document.getElementById(i).textContent="");return}
- pv.append(spriteCanvas(c,null,0,view,{a:anim,i:tick}));showTurn();
+ pv.append(spriteCanvas(c));
  document.getElementById("pHandle").textContent=c.nome||"sem nome";
  const tag=document.getElementById("pTag");tag.textContent=c.tipo==="npc"?"NPC":"Avatar jogável";tag.classList.toggle("avatar",c.tipo==="avatar");
  document.getElementById("pRole").textContent=c.tipo==="npc"?[c.papel,byId(PLACES,c.local).n,byId(DOES,c.faz).n].filter(Boolean).join(" · "):"Opção de personagem para quem entra no jogo";
@@ -325,16 +354,17 @@ function renderForm(){
  const f=document.getElementById("form");const sy=window.scrollY;f.textContent="";const c=chars[cur];
  if(!c){const e=document.createElement("div");e.className="empty";e.textContent="Escolha um personagem na lista ou crie um novo.";f.append(e);return}
  const ident=[field("Nome",text("f-nome",c.nome,24,"ex.: mel.vbz","nome")),
-  field("Tipo",chips([{id:"npc",n:"NPC"},{id:"avatar",n:"Avatar jogável"}],c.tipo,v=>set("tipo",v))),
-  field("Corpo",chips([{id:"m",n:"Homem"},{id:"f",n:"Mulher"}],c.corpo,v=>set("corpo",v))),
+  two(field("Tipo",chips([{id:"npc",n:"NPC"},{id:"avatar",n:"Avatar jogável"}],c.tipo,v=>set("tipo",v))),field("Corpo",chips([{id:"m",n:"Masculino"},{id:"f",n:"Feminino"}],c.corpo,v=>set("corpo",v)))),
   field("Pele",swatches(SKIN,c.pele,v=>set("pele",v)))];
  f.append(sec("Personagem",...ident));
- f.append(sec("Cores",
-  field("Boné",swatches(CLOTH,c.corChapeu,v=>set("corChapeu",v))),
-  field("Cabelo",swatches(HAIRC,c.corCabelo,v=>set("corCabelo",v))),
-  field("Camiseta",swatches(CLOTH,c.corTop,v=>set("corTop",v))),
-  field("Calça",swatches(CLOTH,c.corBaixo,v=>set("corBaixo",v))),
-  field("Tênis",swatches(CLOTH,c.corTenis,v=>set("corTenis",v)))));
+ f.append(sec("Cabeça",
+  field("Cabelo",chips(HAIR,c.cabelo,v=>set("cabelo",v)),swatches(HAIRC,c.corCabelo,v=>set("corCabelo",v))),
+  two(field("Chapéu",chips(HAT,c.chapeu,v=>set("chapeu",v)),...(c.chapeu!=="nenhum"?[swatches(CLOTH,c.corChapeu,v=>set("corChapeu",v))]:[])),
+      field("Óculos",chips(GLASSES,c.oculos,v=>set("oculos",v))))));
+ f.append(sec("Roupa",
+  field("Parte de cima",chips(TOPS,c.top,v=>set("top",v)),swatches(CLOTH,c.corTop,v=>set("corTop",v))),
+  field("Parte de baixo",chips(BOTTOMS,c.baixo,v=>set("baixo",v)),swatches(CLOTH,c.corBaixo,v=>set("corBaixo",v))),
+  field("Calçado",chips(SHOES,c.tenis,v=>set("tenis",v)),swatches(CLOTH,c.corTenis,v=>set("corTenis",v)))));
  if(c.tipo==="npc"){
   const places=PLACES.filter(p=>p.id!=="atual"||c.pos);
   f.append(sec("No mundo",
@@ -389,14 +419,12 @@ document.getElementById("btnNew").onclick=()=>create();
 document.getElementById("btnImport").onclick=openImport;
 /* pixelation slider: one setting for the whole cast, saved with it so Claude can read it */
 const pxRange=document.getElementById("pxRange");let pxTimer=null;
-function showPx(){pxRange.value=pxLevel;document.getElementById("pxName").textContent=PX_NAMES[pxLevel]+" · "+(pxLevel<=1?(SW/2)+" × "+(SH/2):SW*2**(pxLevel-2)+" × "+SH*2**(pxLevel-2))+" pixels"}
+function showPx(){pxRange.value=pxLevel;document.getElementById("pxName").textContent=PX_NAMES[pxLevel]+" · "+(pxLevel<=1?"13 × 33":SW*2**(pxLevel-2)+" × "+SH*2**(pxLevel-2))+" pixels"}
 pxRange.oninput=()=>{pxLevel=Math.max(1,Math.min(4,+pxRange.value||2));showPx();renderPreview();try{localStorage.setItem("vbz-atelie-pixel",pxLevel)}catch(e){}
  clearTimeout(pxTimer);pxTimer=setTimeout(async()=>{if(mode==="db"){try{await db.doc("config/estilo").set({pixel:pxLevel});setStatus("Salvo na nuvem",true)}catch(e){}}},600)};
 showPx();
 const zmRange=document.getElementById("zmRange");let zoom=3;try{const v=+localStorage.getItem("vbz-atelie-zoom");if(v>=1&&v<=6)zoom=v}catch(e){}
-function showZoom(){zmRange.value=zoom;document.getElementById("zmName").textContent=zoom+"× · "+66*zoom+" px de altura";document.getElementById("preview").style.setProperty("--zh",66*zoom+"px")}
-document.getElementById("btnSheet").onclick=downloadSheet;showAnim();
-document.getElementById("btnTurn").onclick=()=>{view=(view+1)%VIEWS.length;renderPreview()};
+function showZoom(){zmRange.value=zoom;document.getElementById("zmName").textContent=zoom+"× · "+SH*zoom+" px de altura";document.getElementById("preview").style.setProperty("--zh",SH*zoom+"px")}
 zmRange.oninput=()=>{zoom=Math.max(1,Math.min(6,+zmRange.value||3));showZoom();try{localStorage.setItem("vbz-atelie-zoom",zoom)}catch(e){}};
 showZoom();
 
