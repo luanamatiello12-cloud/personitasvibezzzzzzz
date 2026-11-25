@@ -204,10 +204,11 @@ function sprite(c){
  const shine=[255,255,255];
  put(9,10,shine,"head");put(10,10,ink,"head");rect(9,11,10,11,ink,"head");
  put(13,10,shine,"head");put(14,10,ink,"head");rect(13,11,14,11,ink,"head");
- put(8,12,mul(sk,.9),"head");put(15,12,mul(sk,.9),"head");row(15,10,13,skD,"head");
- row(8,8,10,hcD,"head");row(8,13,15,hcD,"head");
- put(12,12,skD,"head");put(11,14,mul(sk,.6),"head");put(12,14,mul(sk,.6),"head");
- if(fem){put(8,13,mul(sk,1.12),"head");put(15,13,mul(sk,1.12),"head")}
+ row(8,9,10,hcD,"head");row(8,13,14,hcD,"head");
+ const lip=mul(sk,.55),blush=[Math.min(255,sk[0]+16),Math.round(sk[1]*.86),Math.round(sk[2]*.9)];
+ put(12,12,skD,"head");put(10,13,lip,"head");put(13,13,lip,"head");put(11,14,lip,"head");put(12,14,lip,"head");
+ put(8,13,blush,"head");put(15,13,blush,"head");
+ if(fem){put(8,9,ink,"head");put(15,9,ink,"head")}
  // bottoms
  if(c.baixo==="saia"){rect(T[0],35,T[1],38,bc,"bottom");rect(T[0]-1,39,T[1]+1,43,bc,"bottom");rect(T[0]-2,44,T[1]+2,46,bc,"bottom");for(let x=T[0];x<=T[1];x+=3)rect(x,40,x,46,bcD,"bottom")}
  else{const end=c.baixo==="shorts"?45:56;rect(T[0],35,11,38,bc,"bottom","botL");rect(12,35,T[1],38,bc,"bottom","botL");rect(LL[0],39,LL[1],end,bc,"bottom","botL");rect(LR[0],39,LR[1],end,bc,"bottom","botR");
@@ -238,6 +239,12 @@ function sprite(c){
   if(c.top==="moletom"){row(18,9,14,tcD,"top","hood");put(9,19,tcD,"top","hood");put(14,19,tcD,"top","hood");rect(9,30,14,33,tcD,"top","torsoT");put(11,21,[240,236,230],"top","torsoT");put(12,22,[240,236,230],"top","torsoT")}
   if(c.top==="jaqueta"){rect(11,20,12,bot,[237,232,224],"inner");put(10,20,tcD,"top","torsoT");put(13,20,tcD,"top","torsoT");put(8,31,tcD,"top","torsoT");put(15,31,tcD,"top","torsoT")}
  }
+ // feminine shape: waist cut in, bust line, hips left wide
+ if(fem){for(let y=27;y<=32;y++){put(T[0],y,null,null);put(T[1],y,null,null)}
+  const bs=c.top==="regata"||c.top==="camiseta"||c.top==="babytee"||longSl?tcD:skD;
+  for(const x of[T[0]+1,T[0]+2,T[0]+3,T[1]-3,T[1]-2,T[1]-1])put(x,26,bs,"top","torsoT");
+  put(T[0]+4,25,bs,"top","torsoT");put(T[1]-4,25,bs,"top","torsoT");
+  put(T[0]+1,29,bs,"top","torsoT");put(T[1]-1,29,bs,"top","torsoT")}
  // front hair
  const h=c.cabelo;
  if(h==="curto"||h==="comprido"||h==="coque"){
