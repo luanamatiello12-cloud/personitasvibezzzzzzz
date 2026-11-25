@@ -65,6 +65,8 @@ button{font:inherit;cursor:pointer;color:inherit}
 .floor canvas{position:relative;z-index:1;height:var(--zh,198px);max-width:100%;width:auto;image-rendering:pixelated;image-rendering:crisp-edges}
 .pxctl{padding:12px 14px 4px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--line)}
 .pxctl label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.animrow{display:flex;gap:6px;flex-wrap:wrap}.animrow .btn{padding:6px 10px;font-size:13px;cursor:pointer}.animrow .btn.on{background:var(--pink);color:#fff;border-color:var(--pink)}
+.sheetbox{margin:0 0 10px;padding:8px;border:1px solid var(--line);border-radius:10px;background:#5b3a8c}.sheetbox img{display:block;width:100%;image-rendering:pixelated}.sheetbox .hint{color:#fff;margin-top:6px}
 .btn.turn{margin:6px 0 8px;font-size:13px;cursor:pointer}
 .pxrow{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
 .pxrow input{flex:1;accent-color:var(--pink);min-width:0}
@@ -139,6 +141,10 @@ textarea{resize:vertical;min-height:58px}
         <div class="pxrow"><span>menor</span><input type="range" id="zmRange" min="1" max="6" step="1" value="3"><span>maior</span></div>
         <div class="hint" id="zmName">3×</div>
         <button class="btn turn" id="btnTurn" type="button" aria-pressed="false">↻ Virar · vendo de frente</button>
+        <label>Animação</label>
+        <div class="animrow" id="animRow"></div>
+        <button class="btn turn" id="btnSheet" type="button">⬇ Baixar animação pro jogo (PNG)</button>
+        <div class="sheetbox" id="sheetBox" hidden></div>
       </div>
       <div class="plate">
         <div class="h"><span class="handle" id="pHandle">—</span><span class="tag" id="pTag">NPC</span></div>
@@ -214,20 +220,40 @@ function halvePx(px,W,H){const w=W/2,h=H/2,out=new Array(w*h).fill(null);
  return out}
 const PX_NAMES={1:"Bem pixelado",2:"Padrão",3:"Suave",4:"Bem suave"};
 let pxLevel=2;try{const v=+localStorage.getItem("vbz-atelie-pixel");if(PX_NAMES[v])pxLevel=v}catch(e){}
-function pixels(c,level,view){let px=new Array(SW*SH).fill(null),W=SW,H=SH;
- if(PH){const pc=partColors(c),tint={};
-  for(const k in pc)tint[k]=pc[k]!==PHOTO_DEF[k]?{t:rgb(pc[k]),l:lumOf(rgb(PHOTO_DEF[k]))}:null;
+/* the tinted figure on the base grid, facing left, no shadow */
+function baseGrid(c){const g=new Array(SW*SH).fill(null);if(!PH)return g;const pc=partColors(c),tint={},fem=c.corpo==="f";
+ for(const k in pc)tint[k]=pc[k]!==PHOTO_DEF[k]?{t:rgb(pc[k]),l:lumOf(rgb(PHOTO_DEF[k]))}:null;
+ for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){let p=PARTS[y][x],v=null;const f=fem&&FEM[y*SW+x];
+  if(f&&(!f[2]||p===".")){p=f[0];v=f[1]}else if(p!=="."){const o=(y*SW+x)*4;v=[PH[o],PH[o+1],PH[o+2]]}
+  if(!v)continue;const tt=tint[p];g[y*SW+x]=tt?mul(tt.t,Math.min(1.35,lumOf(v)/tt.l)):v}
+ return g}
+/* cut-out animation: the figure is split into legs, body and arms, and each piece is nudged per frame */
+const ANIMS=[{id:"parado",n:"Parado",f:1},{id:"respirando",n:"Respirando",f:4},{id:"andando",n:"Andando",f:4}];
+const LEG_Y=53, LEG_SPLIT=16, ARM_Y=36;
+function pose(g,anim,i){if(!anim||anim==="parado")return g;
+ const out=new Array(SW*SH).fill(null),putp=(x,y,v)=>{if(x>=0&&y>=0&&x<SW&&y<SH)out[y*SW+x]=v};
+ let bob=0,leg=0;
+ if(anim==="respirando")bob=(i%4===1||i%4===2)?1:0;
+ if(anim==="andando"){const ph=i%4;bob=ph%2?0:1;leg=ph===0?3:ph===2?-3:0}
+ const isArm=(x,y)=>(x<=7||x>=22)&&y>=ARM_Y&&y<=52&&"SL".includes(PARTS[y][x]);
+ // legs: far one first, the near one on top; the foot going back lifts a little
+ for(const left of[true,false])for(let y=LEG_Y;y<SH;y++)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(!v||(x<LEG_SPLIT)!==left||isArm(x,y))continue;
+  const t=Math.max(0,(y-58)/19),a=left?-leg:leg,dx=Math.round(a*t);putp(x+dx,y-(dx>0&&t>.7?1:0),v)}
+ // head and torso bob together
+ for(let y=LEG_Y-1;y>=0;y--)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(v&&!isArm(x,y))putp(x,y+bob,v)}
+ // arms swing against the legs
+ for(let y=ARM_Y;y<=52;y++)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(!v||!isArm(x,y))continue;
+  const t=(y-ARM_Y)/16,a=(x<LEG_SPLIT?leg:-leg)*.7;putp(x+Math.round(a*t),y+bob,v)}
+ return out}
+function pixels(c,level,view,fr){let px=new Array(SW*SH).fill(null),W=SW,H=SH;
+ if(PH){const g=pose(baseGrid(c),fr&&fr.a,fr?fr.i:0);
   for(let y=SH-5;y<SH;y++)for(let x=0;x<SW;x++){const dx=(x-(SW-1)/2)/13,dy=(y-(SH-2.5))/2.2;if(dx*dx+dy*dy<=1)px[y*SW+x]=[0,0,0,70]}
-  const fem=c.corpo==="f";
-  for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){let p=PARTS[y][x],v=null;const f=fem&&FEM[y*SW+x];
-   if(f&&(!f[2]||p===".")){p=f[0];v=f[1]}else if(p!=="."){const o=(y*SW+x)*4;v=[PH[o],PH[o+1],PH[o+2]]}
-   if(!v)continue;const tt=tint[p];
-   px[y*SW+(view?SW-1-x:x)]=tt?mul(tt.t,Math.min(1.35,lumOf(v)/tt.l)):v}}
+  for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){const v=g[y*SW+x];if(v)px[y*SW+(view?SW-1-x:x)]=v}}
  if(level<=1){px=halvePx(px,W,H);W/=2;H/=2}
  for(let i=2;i<level;i++){px=scale2x(px,W,H);W*=2;H*=2}
  return{px,W,H}}
-function spriteCanvas(c,crop,level,view){
- const r=pixels(c,crop?2:(level||pxLevel),crop?0:view),px=r.px,W=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
+function spriteCanvas(c,crop,level,view,fr){
+ const r=pixels(c,crop?2:(level||pxLevel),crop?0:view,crop?null:fr),px=r.px,W=r.W;const [x0,y0,w,h]=crop||[0,0,r.W,r.H];
  const cv=document.createElement("canvas");cv.width=w;cv.height=h;const ctx=cv.getContext("2d");const img=ctx.createImageData(w,h);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=px[(y+y0)*W+(x+x0)];if(!v)continue;const o=(y*w+x)*4;img.data[o]=v[0];img.data[o+1]=v[1];img.data[o+2]=v[2];img.data[o+3]=v[3]||255}
  ctx.putImageData(img,0,0);cv.setAttribute("role","img");cv.setAttribute("aria-label","Sprite de "+(c.nome||"personagem"));return cv}
@@ -273,10 +299,21 @@ function renderCast(){
 }
 let view=0;const VIEWS=["como na foto","pro outro lado"];
 function showTurn(){const b=document.getElementById("btnTurn");b.textContent="↻ Virar · vendo "+VIEWS[view];b.setAttribute("aria-pressed",view>0)}
+let anim="parado",tick=0;
+function showAnim(){const r=document.getElementById("animRow");r.textContent="";for(const a of ANIMS){const b=document.createElement("button");b.type="button";b.className="btn"+(a.id===anim?" on":"");b.textContent=a.n;b.setAttribute("aria-pressed",a.id===anim);b.onclick=()=>{anim=a.id;tick=0;showAnim();renderPreview()};r.append(b)}}
+setInterval(()=>{if(anim==="parado")return;const c=chars[cur],pv=document.getElementById("preview");if(!c||!pv)return;tick++;pv.textContent="";pv.append(spriteCanvas(c,null,0,view,{a:anim,i:tick}))},190);
+/* sprite sheet for the game: one row per animation, 4 frames each, facing left */
+function sheetCanvas(c){const lv=Math.max(2,pxLevel),rowsA=ANIMS.filter(a=>a.id!=="parado");let fw=0,fh=0;const cells=rowsA.map(a=>[0,1,2,3].map(i=>{const cv=spriteCanvas(c,null,lv,0,{a:a.id,i});fw=cv.width;fh=cv.height;return cv}));
+ const sh=document.createElement("canvas");sh.width=fw*4;sh.height=fh*rowsA.length;const x=sh.getContext("2d");cells.forEach((r,j)=>r.forEach((cv,i)=>x.drawImage(cv,i*fw,j*fh)));return{sh,fw,fh}}
+function downloadSheet(){const c=chars[cur];if(!c||!PH)return;const {sh,fw,fh}=sheetCanvas(c),name=(c.nome||"boneco").replace(/[^a-z0-9_.-]+/gi,"_")+"_"+fw+"x"+fh+".png";
+ const box=document.getElementById("sheetBox");box.textContent="";const im=new Image();im.src=sh.toDataURL("image/png");im.alt="Folha de sprites de "+(c.nome||"personagem");
+ const cap=document.createElement("div");cap.className="hint";cap.textContent="Cada quadro tem "+fw+" × "+fh+" px. Linha 1: respirando. Linha 2: andando. 4 quadros por linha, olhando para a esquerda (espelhe no jogo para o outro lado).";
+ box.append(im,cap);box.hidden=false;
+ try{const a=document.createElement("a");a.href=im.src;a.download=name;document.body.append(a);a.click();a.remove()}catch(e){}}
 function renderPreview(){
  const c=chars[cur];const pv=document.getElementById("preview");pv.textContent="";
  if(!c){["pHandle","pRole","pLine"].forEach(i=>document.getElementById(i).textContent="");return}
- pv.append(spriteCanvas(c,null,0,view));showTurn();
+ pv.append(spriteCanvas(c,null,0,view,{a:anim,i:tick}));showTurn();
  document.getElementById("pHandle").textContent=c.nome||"sem nome";
  const tag=document.getElementById("pTag");tag.textContent=c.tipo==="npc"?"NPC":"Avatar jogável";tag.classList.toggle("avatar",c.tipo==="avatar");
  document.getElementById("pRole").textContent=c.tipo==="npc"?[c.papel,byId(PLACES,c.local).n,byId(DOES,c.faz).n].filter(Boolean).join(" · "):"Opção de personagem para quem entra no jogo";
@@ -366,6 +403,7 @@ pxRange.oninput=()=>{pxLevel=Math.max(1,Math.min(4,+pxRange.value||2));showPx();
 showPx();
 const zmRange=document.getElementById("zmRange");let zoom=3;try{const v=+localStorage.getItem("vbz-atelie-zoom");if(v>=1&&v<=6)zoom=v}catch(e){}
 function showZoom(){zmRange.value=zoom;document.getElementById("zmName").textContent=zoom+"× · "+66*zoom+" px de altura";document.getElementById("preview").style.setProperty("--zh",66*zoom+"px")}
+document.getElementById("btnSheet").onclick=downloadSheet;showAnim();
 document.getElementById("btnTurn").onclick=()=>{view=(view+1)%VIEWS.length;renderPreview()};
 zmRange.oninput=()=>{zoom=Math.max(1,Math.min(6,+zmRange.value||3));showZoom();try{localStorage.setItem("vbz-atelie-zoom",zoom)}catch(e){}};
 showZoom();
